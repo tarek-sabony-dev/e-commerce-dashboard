@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "product": "Cup",
+    "price": "19.99$",
+    "discountedPrice": "15.99$",
+    "stock": "18",
+    "avgRating": "4.2",
+    "category": "Kithen"
+  },
+  {
+    "id": 2,
+    "product": "T-Shirt",
+    "price": "20.99$",
+    "discountedPrice": "18.99$",
+    "stock": "9",
+    "avgRating": "2.5",
+    "category": "Clothing"
+  },
+  {
+    "id": 3,
+    "product": "Sofa",
+    "price": "250$",
+    "discountedPrice": "222$",
+    "stock": "184",
+    "avgRating": "3.9",
+    "category": "Furniture"
+  }
+]
