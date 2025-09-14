@@ -49,19 +49,11 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { toast } from "sonner"
 import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Drawer,
@@ -347,37 +339,20 @@ export function DataTable({
 
   return (
     <Tabs
-      defaultValue="outline"
+      defaultValue="products"
       className="w-full flex-col justify-start gap-6"
     >
-      <div className="flex items-center justify-between px-4 lg:px-6">
+      <div className="flex items-center justify-between flex-wrap gap-4 px-4 lg:px-6 ">
         <Label htmlFor="view-selector" className="sr-only">
           View
         </Label>
-        <Select defaultValue="outline">
-          <SelectTrigger
-            className="flex w-fit @4xl/main:hidden"
-            size="sm"
-            id="view-selector"
-          >
-            <SelectValue placeholder="Select a view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="outline">Outline</SelectItem>
-            <SelectItem value="past-performance">Past Performance</SelectItem>
-            <SelectItem value="key-personnel">Key Personnel</SelectItem>
-            <SelectItem value="focus-documents">Focus Documents</SelectItem>
-          </SelectContent>
-        </Select>
-        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="outline">Outline</TabsTrigger>
-          <TabsTrigger value="past-performance">
-            Past Performance <Badge variant="secondary">3</Badge>
+        <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 flex">
+          <TabsTrigger value="products">
+            Products
           </TabsTrigger>
-          <TabsTrigger value="key-personnel">
-            Key Personnel <Badge variant="secondary">2</Badge>
+          <TabsTrigger value="categories">
+            Categories
           </TabsTrigger>
-          <TabsTrigger value="focus-documents">Focus Documents</TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
           <DropdownMenu>
@@ -415,12 +390,12 @@ export function DataTable({
           </DropdownMenu>
           <Button variant="outline" size="sm">
             <IconPlus />
-            <span className="hidden lg:inline">Add Section</span>
+            <span className="hidden lg:inline">Add Product</span>
           </Button>
         </div>
       </div>
       <TabsContent
-        value="outline"
+        value="products"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
         <div className="overflow-hidden rounded-lg border">
@@ -553,16 +528,7 @@ export function DataTable({
         </div>
       </TabsContent>
       <TabsContent
-        value="past-performance"
-        className="flex flex-col px-4 lg:px-6"
-      >
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent value="key-personnel" className="flex flex-col px-4 lg:px-6">
-        <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-      </TabsContent>
-      <TabsContent
-        value="focus-documents"
+        value="categories"
         className="flex flex-col px-4 lg:px-6"
       >
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
@@ -570,26 +536,6 @@ export function DataTable({
     </Tabs>
   )
 }
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-]
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig
 
 function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
   const isMobile = useIsMobile()
@@ -609,131 +555,36 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 0,
-                    right: 10,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                    hide
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Area
-                    dataKey="mobile"
-                    type="natural"
-                    fill="var(--color-mobile)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-mobile)"
-                    stackId="a"
-                  />
-                  <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                    stackId="a"
-                  />
-                </AreaChart>
-              </ChartContainer>
-              <Separator />
-              <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <IconTrendingUp className="size-4" />
-                </div>
-                <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
+          <Separator />
           <form className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
-              <Label htmlFor="header">Header</Label>
-              <Input id="header" defaultValue={item.product} />
+              <Label htmlFor="product">Product</Label>
+              <Input id="product" defaultValue={item.product} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
-                <Label htmlFor="type">Type</Label>
-                <Select defaultValue={item.price}>
-                  <SelectTrigger id="type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Table of Contents">
-                      Table of Contents
-                    </SelectItem>
-                    <SelectItem value="Executive Summary">
-                      Executive Summary
-                    </SelectItem>
-                    <SelectItem value="Technical Approach">
-                      Technical Approach
-                    </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-                    <SelectItem value="Focus Documents">
-                      Focus Documents
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="price">Price</Label>
+                <Input id="price" defaultValue={item.price} />
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="status">Status</Label>
-                <Select defaultValue={item.discountedPrice}>
-                  <SelectTrigger id="status" className="w-full">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Done">Done</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="target">Target</Label>
-                <Input id="target" defaultValue={item.stock} />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="limit">Limit</Label>
-                <Input id="limit" defaultValue={item.avgRating} />
+                <Label htmlFor="discounted-price">discounted Price</Label>
+                <Input id="discounted-price" defaultValue={item.discountedPrice} />
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <Label htmlFor="reviewer">Reviewer</Label>
+              <Label htmlFor="stock">Stock</Label>
+              <Input id="stock" defaultValue={item.stock} />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="category">Category</Label>
               <Select defaultValue={item.category}>
-                <SelectTrigger id="reviewer" className="w-full">
-                  <SelectValue placeholder="Select a reviewer" />
+                <SelectTrigger id="category" className="w-full">
+                  <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                  <SelectItem value="Jamik Tashpulatov">
-                    Jamik Tashpulatov
-                  </SelectItem>
-                  <SelectItem value="Emily Whalen">Emily Whalen</SelectItem>
+                  <SelectItem value="Done">Done</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Not Started">Not Started</SelectItem>
                 </SelectContent>
               </Select>
             </div>
