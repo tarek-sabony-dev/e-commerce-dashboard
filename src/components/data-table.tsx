@@ -98,9 +98,11 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs"
 import { StarIcon } from "lucide-react"
+import Image from "next/image"
 
 export const schema = z.object({
   id: z.number(),
+  imageSnapshot: z.string(),
   product: z.string(),
   price: z.string(),
   discountedPrice: z.string(),
@@ -108,26 +110,6 @@ export const schema = z.object({
   avgRating: z.string(),
   category: z.string(),
 })
-
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  })
-
-  return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent"
-    >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  )
-}
 
 const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
@@ -138,7 +120,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   {
     id: "select",
     header: ({ table }) => (
-      <div className="flex items-center justify-center">
+      <div className="w-12 flex items-center justify-center">
         <Checkbox
           checked={
             table.getIsAllPageRowsSelected() ||
@@ -150,7 +132,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       </div>
     ),
     cell: ({ row }) => (
-      <div className="flex items-center justify-center">
+      <div className="w-12 flex items-center justify-center">
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
@@ -165,7 +147,12 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     accessorKey: "product",
     header: "Product",
     cell: ({ row }) => {
-      return <TableCellViewer item={row.original} />
+      return (
+        <div className="flex items-center gap-4 ">
+          <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" /> 
+          <TableCellViewer item={row.original} /> 
+        </div>
+      ) 
     },
     enableHiding: false,
   },
@@ -247,32 +234,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
 ]
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  })
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  )
-}
-
-export function DataTable({
+export default function DataTable({
   data: initialData,
 }: {
   data: z.infer<typeof schema>[]
@@ -534,6 +496,51 @@ export function DataTable({
         <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
       </TabsContent>
     </Tabs>
+  )
+}
+
+// Create a separate component for the drag handle
+function DragHandle({ id }: { id: number }) {
+  const { attributes, listeners } = useSortable({
+    id,
+  })
+
+  return (
+    <Button
+      {...attributes}
+      {...listeners}
+      variant="ghost"
+      size="icon"
+      className="text-muted-foreground size-7 hover:bg-transparent cursor-grab active:cursor-grabbing"
+    >
+      <IconGripVertical className="text-muted-foreground size-3" />
+      <span className="sr-only">Drag to reorder</span>
+    </Button>
+  )
+}
+
+function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+  const { transform, transition, setNodeRef, isDragging } = useSortable({
+    id: row.original.id,
+  })
+
+  return (
+    <TableRow
+      data-state={row.getIsSelected() && "selected"}
+      data-dragging={isDragging}
+      ref={setNodeRef}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition,
+      }}
+    >
+      {row.getVisibleCells().map((cell) => (
+        <TableCell key={cell.id}>
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
   )
 }
 
