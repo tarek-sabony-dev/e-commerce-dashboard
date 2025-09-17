@@ -341,10 +341,7 @@ export default function DataTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant="outline" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Add Product</span>
-          </Button>
+          <AddProductButton/>
         </div>
       </div>
       <TabsContent
@@ -589,6 +586,140 @@ function TableCellViewer({ item }: { item: Product }) {
       <DrawerContent>
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.product}</DrawerTitle>
+          <DrawerDescription>
+            Showing total visitors for the last 6 months
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
+          <Separator />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="product">Product</Label>
+              <Input 
+                id="product"
+                value={formData.product}
+                onChange={(e) => handleInputChange('product', e.target.value)}
+                placeholder="Enter product name"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="price">Price</Label>
+                <Input
+                  id="price"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  placeholder="19.99$"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Label htmlFor="discounted-price">discounted Price</Label>
+                <Input
+                  id="discounted-price"
+                  value={formData.discountedPrice}
+                  onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
+                  placeholder="15.99$"
+                  required  
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="stock">Stock</Label>
+              <Input
+                id="stock"
+                value={formData.stock}
+                onChange={(e) => handleInputChange('stock', e.target.value)}
+                placeholder="100"
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="category">Category</Label>
+              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                <SelectTrigger id="category" className="w-full">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Kitchen">Kitchen</SelectItem>
+                  <SelectItem value="Clothing">Clothing</SelectItem>
+                  <SelectItem value="Furniture">Furniture</SelectItem>
+                  <SelectItem value="Electronics">Electronics</SelectItem>
+                  <SelectItem value="Sports">Sports</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button>Submit</Button>
+          </form>
+        </div>
+        <DrawerFooter>
+          <DrawerClose asChild>
+            <Button variant="outline">Done</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+function AddProductButton() {
+  const isMobile = useIsMobile()
+
+  const dispatch = useAppDispatch()
+  const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
+    imageSnapshot: "/place-holder.png",
+    product: "",
+    price: "",
+    discountedPrice: "",
+    stock: "",
+    avgRating: "",
+    category: "",
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Generate a new ID (simple increment from existing products)
+    const newId = Date.now() // Using timestamp as ID for simplicity
+    
+    const newProduct: Product = {
+      id: newId,
+      ...formData,
+    }
+    
+    dispatch(addProduct(newProduct))
+    
+    // Reset form
+    setFormData({
+      imageSnapshot: "",
+      product: "",
+      price: "",
+      discountedPrice: "",
+      stock: "",
+      avgRating: "",
+      category: "",
+    })
+  }
+
+  const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  return (
+    <Drawer direction={isMobile ? "bottom" : "right"}>
+      <DrawerTrigger asChild>
+        <Button variant="outline" size="sm">
+          <IconPlus />
+          <span className="hidden lg:inline">Add Product</span>
+        </Button>
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="gap-1">
+          <DrawerTitle>{"New Product"}</DrawerTitle>
           <DrawerDescription>
             Showing total visitors for the last 6 months
           </DrawerDescription>
