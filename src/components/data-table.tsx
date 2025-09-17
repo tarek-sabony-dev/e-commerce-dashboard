@@ -49,7 +49,6 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { z } from "zod"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Badge } from "@/components/ui/badge"
@@ -99,19 +98,10 @@ import {
 } from "@/components/ui/tabs"
 import { StarIcon } from "lucide-react"
 import Image from "next/image"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { addProduct, Product, selectProducts, updateProduct } from "@/lib/features/products/productsSlice"
 
-export const schema = z.object({
-  id: z.number(),
-  imageSnapshot: z.string(),
-  product: z.string(),
-  price: z.string(),
-  discountedPrice: z.string(),
-  stock: z.string(),
-  avgRating: z.string(),
-  category: z.string(),
-})
-
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
+const columns: ColumnDef<Product>[] = [
   {
     id: "drag",
     header: () => null,
@@ -149,7 +139,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4 ">
-          <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" /> 
+          <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" /> 
           <TableCellViewer item={row.original} /> 
         </div>
       ) 
@@ -234,18 +224,19 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
   },
 ]
 
-export default function DataTable({
-  data: initialData,
-}: {
-  data: z.infer<typeof schema>[]
-}) {
-  const [data, setData] = React.useState(() => initialData)
+export default function DataTable() {
+  // Extract products array from Redux store using the selectProducts selector
+  const products : Product[] = useAppSelector(selectProducts)
+  const [data, setData] = React.useState(products)
+  
+  // Sync local data with Redux store when products change
+  React.useEffect(() => {
+    setData(products)
+  }, [products])
+  
   const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  )
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
@@ -519,7 +510,7 @@ function DragHandle({ id }: { id: number }) {
   )
 }
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+function DraggableRow({ row }: { row: Row<Product> }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   })
@@ -544,8 +535,49 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
   )
 }
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+function TableCellViewer({ item }: { item: Product }) {
   const isMobile = useIsMobile()
+
+  const dispatch = useAppDispatch()
+  const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
+    imageSnapshot: item.imageSnapshot,
+    product: item.product,
+    price: item.price,
+    discountedPrice: item.discountedPrice,
+    stock: item.stock,
+    avgRating: item.avgRating,
+    category: item.category,
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    // Update the existing product with the form data
+    const updatedProduct: Product = {
+      id: item.id, // Keep the original ID
+      ...formData,
+    }
+    
+    dispatch(updateProduct(updatedProduct))
+    
+    // Reset form to updated values
+    setFormData({
+      imageSnapshot: formData.imageSnapshot,
+      product: formData.product,
+      price: formData.price,
+      discountedPrice: formData.discountedPrice,
+      stock: formData.stock,
+      avgRating: formData.avgRating,
+      category: formData.category,
+    })
+  }
+
+  const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
 
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
@@ -563,42 +595,68 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           <Separator />
-          <form className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-3">
               <Label htmlFor="product">Product</Label>
-              <Input id="product" defaultValue={item.product} />
+              <Input 
+                id="product"
+                value={formData.product}
+                onChange={(e) => handleInputChange('product', e.target.value)}
+                placeholder="Enter product name"
+                required
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
                 <Label htmlFor="price">Price</Label>
-                <Input id="price" defaultValue={item.price} />
+                <Input
+                  id="price"
+                  value={formData.price}
+                  onChange={(e) => handleInputChange('price', e.target.value)}
+                  placeholder="19.99$"
+                  required
+                />
               </div>
               <div className="flex flex-col gap-3">
                 <Label htmlFor="discounted-price">discounted Price</Label>
-                <Input id="discounted-price" defaultValue={item.discountedPrice} />
+                <Input
+                  id="discounted-price"
+                  value={formData.discountedPrice}
+                  onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
+                  placeholder="15.99$"
+                  required  
+                />
               </div>
             </div>
             <div className="flex flex-col gap-3">
               <Label htmlFor="stock">Stock</Label>
-              <Input id="stock" defaultValue={item.stock} />
+              <Input
+                id="stock"
+                value={formData.stock}
+                onChange={(e) => handleInputChange('stock', e.target.value)}
+                placeholder="100"
+                required
+              />
             </div>
             <div className="flex flex-col gap-3">
               <Label htmlFor="category">Category</Label>
-              <Select defaultValue={item.category}>
+              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
                 <SelectTrigger id="category" className="w-full">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Done">Done</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Not Started">Not Started</SelectItem>
+                  <SelectItem value="Kitchen">Kitchen</SelectItem>
+                  <SelectItem value="Clothing">Clothing</SelectItem>
+                  <SelectItem value="Furniture">Furniture</SelectItem>
+                  <SelectItem value="Electronics">Electronics</SelectItem>
+                  <SelectItem value="Sports">Sports</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <Button>Submit</Button>
           </form>
         </div>
         <DrawerFooter>
-          <Button>Submit</Button>
           <DrawerClose asChild>
             <Button variant="outline">Done</Button>
           </DrawerClose>
