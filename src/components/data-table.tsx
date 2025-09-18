@@ -78,7 +78,6 @@ import { StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { addProduct, Product, selectProducts, updateProduct, removeProduct } from "@/lib/features/products/productsSlice"
-import { it } from "node:test"
 
 const columns: ColumnDef<Product>[] = [
 
@@ -115,7 +114,7 @@ const columns: ColumnDef<Product>[] = [
       return (
         <div className="flex items-center gap-4 ">
           <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" /> 
-          <TableCellViewer 
+          <ProductForm 
             item={row.original}
             trigger={
               <Button variant="link" className="text-foreground w-fit px-0 text-left">
@@ -129,23 +128,32 @@ const columns: ColumnDef<Product>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "description",
+    header: "Description",
+    cell: ({ row }) => (
+      <div className="w-32 truncate">
+        {row.original.description}
+      </div>
+    ),
+  },
+  {
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.price}
+          {row.original.price}$ 
         </Badge>
       </div>
     ),
   },
   {
     accessorKey: "discountedPrice",
-    header: "discounted Price",
+    header: "Discounted Price",
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">
-          {row.original.discountedPrice}
+          {row.original.discountedPrice}$
         </Badge>
       </div>
     ),
@@ -173,7 +181,7 @@ const columns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "category",
-    header: "category",
+    header: "Category",
     cell: ({ row }) => (
       <div className="w-32">
         {row.original.category}
@@ -308,15 +316,16 @@ export default function DataTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <TableCellViewer 
+          <ProductForm
             item={{
               id: -1,
-              imageSnapshot: "/placehold.co/400x400",
+              imageSnapshot: "https://placehold.co/600x400.png",
               product: "",
-              price: "",
-              discountedPrice: "",
-              stock: "",
-              avgRating: "",
+              description: "",
+              price: 0,
+              discountedPrice: 0,
+              stock: 0,
+              avgRating: 0,
               category: "",
             }}
             trigger={
@@ -470,12 +479,12 @@ export default function DataTable() {
   )
 }
 
-function TableCellViewer({ 
+function ProductForm({
   item,
   trigger
-}: { 
-  item: Product, 
-  trigger?: React.ReactNode 
+}: {
+  item: Product,
+  trigger?: React.ReactNode
 }) {
   const isMobile = useIsMobile()
   const dispatch = useAppDispatch()
@@ -483,32 +492,51 @@ function TableCellViewer({
     imageSnapshot: item.imageSnapshot,
     product: item.product,
     price: item.price,
+    description: item.description,
     discountedPrice: item.discountedPrice,
     stock: item.stock,
     avgRating: item.avgRating,
     category: item.category,
   })
 
+  React.useEffect(() => {
+    setFormData({
+      imageSnapshot: item.imageSnapshot,
+      product: item.product,
+      price: item.price,
+      description: item.description,
+      discountedPrice: item.discountedPrice,
+      stock: item.stock,
+      avgRating: item.avgRating,
+      category: item.category,
+    });
+  }, [item]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    const newProduct: Product = {
-      id: item.id, // Takes existing id for updates, or -1 for new products
+    const productData: Product = {
+      id: item.id,
       ...formData,
     }
-
-    // Reset form
-    setFormData({
-      imageSnapshot: '',
-      product: '',
-      price: '',
-      discountedPrice: '',
-      stock: '',
-      avgRating: '',
-      category: '',
-    })
     
-    dispatch(addProduct(newProduct))
+    if (item.id === -1) {
+      dispatch(addProduct(productData))
+    } else {
+      dispatch(updateProduct(productData))
+    }
+
+    // Reset form to initial state of the item
+    setFormData({
+      imageSnapshot: item.imageSnapshot,
+      product: item.product,
+      price: item.price,
+      description: item.description,
+      discountedPrice: item.discountedPrice,
+      stock: item.stock,
+      avgRating: item.avgRating,
+      category: item.category,
+    })
   }
 
   const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
@@ -518,8 +546,21 @@ function TableCellViewer({
     }))
   }
 
+  const handleDrawerClose = () => {
+    setFormData({
+      imageSnapshot: item.imageSnapshot,
+      product: item.product,
+      price: item.price,
+      description: item.description,
+      discountedPrice: item.discountedPrice,
+      stock: item.stock,
+      avgRating: item.avgRating,
+      category: item.category,
+    })
+  }
+
   return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
+    <Drawer onClose={handleDrawerClose} direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
         {trigger}
       </DrawerTrigger>
@@ -527,7 +568,7 @@ function TableCellViewer({
         <DrawerHeader className="gap-1">
           <DrawerTitle>{item.product}</DrawerTitle>
           <DrawerDescription>
-            Showing total visitors for the last 6 months
+            {item.id === -1 ? "Add a new product to the store." : `Editing ${item.product}`}
           </DrawerDescription>
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -543,11 +584,22 @@ function TableCellViewer({
                 required
               />
             </div>
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Enter product description"
+                required
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-3">
                 <Label htmlFor="price">Price</Label>
                 <Input
                   id="price"
+                  type="number"
                   value={formData.price}
                   onChange={(e) => handleInputChange('price', e.target.value)}
                   placeholder="19.99$"
@@ -558,6 +610,7 @@ function TableCellViewer({
                 <Label htmlFor="discounted-price">discounted Price</Label>
                 <Input
                   id="discounted-price"
+                  type="number"
                   value={formData.discountedPrice}
                   onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
                   placeholder="15.99$"
@@ -569,6 +622,7 @@ function TableCellViewer({
               <Label htmlFor="stock">Stock</Label>
               <Input
                 id="stock"
+                type="number"
                 value={formData.stock}
                 onChange={(e) => handleInputChange('stock', e.target.value)}
                 placeholder="100"
@@ -590,13 +644,18 @@ function TableCellViewer({
                 </SelectContent>
               </Select>
             </div>
+            <Button
+              type="submit"
+              value={'Submit'}
+              className={"bg-white"}
+              disabled={!formData.product || !formData.price|| !formData.discountedPrice || !formData.category || !formData.stock}
+            >
+              Submit
+            </Button>
             <DrawerClose asChild>
-              <Input
-                type="submit"
-                value={'Submit'}
-                className={"bg-white"}
-                disabled={!formData.product || !formData.price|| !formData.discountedPrice || !formData.category || !formData.stock}
-              />
+              <Button variant={"destructive"}>
+                Cancel
+              </Button>
             </DrawerClose>
           </form>
         </div>
