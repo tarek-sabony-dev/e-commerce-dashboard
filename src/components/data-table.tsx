@@ -1,38 +1,16 @@
 "use client"
 
 import * as React from "react"
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type UniqueIdentifier,
-} from "@dnd-kit/core"
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers"
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+
 import {
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconCircleCheckFilled,
   IconDotsVertical,
-  IconGripVertical,
   IconLayoutColumns,
-  IconLoader,
   IconPlus,
-  IconTrendingUp,
 } from "@tabler/icons-react"
 import {
   ColumnDef,
@@ -99,14 +77,11 @@ import {
 import { StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { addProduct, Product, selectProducts, updateProduct } from "@/lib/features/products/productsSlice"
+import { addProduct, Product, selectProducts, updateProduct, removeProduct } from "@/lib/features/products/productsSlice"
+import { it } from "node:test"
 
 const columns: ColumnDef<Product>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
+
   {
     id: "select",
     header: ({ table }) => (
@@ -140,7 +115,14 @@ const columns: ColumnDef<Product>[] = [
       return (
         <div className="flex items-center gap-4 ">
           <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" /> 
-          <TableCellViewer item={row.original} /> 
+          <TableCellViewer 
+            item={row.original}
+            trigger={
+              <Button variant="link" className="text-foreground w-fit px-0 text-left">
+                {row.original.product}
+              </Button>
+            } 
+          />
         </div>
       ) 
     },
@@ -200,27 +182,34 @@ const columns: ColumnDef<Product>[] = [
   },
   {
     id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-            size="icon"
-          >
-            <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>Make a copy</DropdownMenuItem>
-          <DropdownMenuItem>Favorite</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
+    cell: ({ row }) => {
+      const dispatch = useAppDispatch();
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+              size="icon"
+            >
+              <IconDotsVertical />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem>Edit</DropdownMenuItem>
+            <DropdownMenuItem>Make a copy</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => dispatch(removeProduct(row.original.id))}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
   },
 ]
 
@@ -242,17 +231,6 @@ export default function DataTable() {
     pageIndex: 0,
     pageSize: 10,
   })
-  const sortableId = React.useId()
-  const sensors = useSensors(
-    useSensor(MouseSensor, {}),
-    useSensor(TouchSensor, {}),
-    useSensor(KeyboardSensor, {})
-  )
-
-  const dataIds = React.useMemo<UniqueIdentifier[]>(
-    () => data?.map(({ id }) => id) || [],
-    [data]
-  )
 
   const table = useReactTable({
     data,
@@ -278,17 +256,6 @@ export default function DataTable() {
     getFacetedRowModel: getFacetedRowModel(),
     getFacetedUniqueValues: getFacetedUniqueValues(),
   })
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (active && over && active.id !== over.id) {
-      setData((data) => {
-        const oldIndex = dataIds.indexOf(active.id)
-        const newIndex = dataIds.indexOf(over.id)
-        return arrayMove(data, oldIndex, newIndex)
-      })
-    }
-  }
 
   return (
     <Tabs
@@ -341,7 +308,24 @@ export default function DataTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <AddProductButton/>
+          <TableCellViewer 
+            item={{
+              id: -1,
+              imageSnapshot: "/placehold.co/400x400",
+              product: "",
+              price: "",
+              discountedPrice: "",
+              stock: "",
+              avgRating: "",
+              category: "",
+            }}
+            trigger={
+              <Button variant="outline" size="sm">
+                <IconPlus />
+                <span className="hidden lg:inline">Add Product</span>
+              </Button>
+            } 
+          />
         </div>
       </div>
       <TabsContent
@@ -349,55 +333,54 @@ export default function DataTable() {
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
         <div className="overflow-hidden rounded-lg border">
-          <DndContext
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-            sensors={sensors}
-            id={sortableId}
-          >
-            <Table>
-              <TableHeader className="bg-muted sticky top-0 z-10">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id} colSpan={header.colSpan}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      )
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody className="**:data-[slot=table-cell]:first:w-8">
-                {table.getRowModel().rows?.length ? (
-                  <SortableContext
-                    items={dataIds}
-                    strategy={verticalListSortingStrategy}
+          <Table>
+            <TableHeader className="bg-muted sticky top-0 z-10">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead key={header.id} colSpan={header.colSpan}>
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
                   >
-                    {table.getRowModel().rows.map((row) => (
-                      <DraggableRow key={row.id} row={row} />
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
                     ))}
-                  </SortableContext>
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </DndContext>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
         <div className="flex items-center justify-between px-4">
           <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
@@ -487,54 +470,14 @@ export default function DataTable() {
   )
 }
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-  const { attributes, listeners } = useSortable({
-    id,
-  })
-
-  return (
-    <Button
-      {...attributes}
-      {...listeners}
-      variant="ghost"
-      size="icon"
-      className="text-muted-foreground size-7 hover:bg-transparent cursor-grab active:cursor-grabbing"
-    >
-      <IconGripVertical className="text-muted-foreground size-3" />
-      <span className="sr-only">Drag to reorder</span>
-    </Button>
-  )
-}
-
-function DraggableRow({ row }: { row: Row<Product> }) {
-  const { transform, transition, setNodeRef, isDragging } = useSortable({
-    id: row.original.id,
-  })
-
-  return (
-    <TableRow
-      data-state={row.getIsSelected() && "selected"}
-      data-dragging={isDragging}
-      ref={setNodeRef}
-      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition,
-      }}
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
-  )
-}
-
-function TableCellViewer({ item }: { item: Product }) {
+function TableCellViewer({ 
+  item,
+  trigger
+}: { 
+  item: Product, 
+  trigger?: React.ReactNode 
+}) {
   const isMobile = useIsMobile()
-
   const dispatch = useAppDispatch()
   const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
     imageSnapshot: item.imageSnapshot,
@@ -549,24 +492,23 @@ function TableCellViewer({ item }: { item: Product }) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Update the existing product with the form data
-    const updatedProduct: Product = {
-      id: item.id, // Keep the original ID
+    const newProduct: Product = {
+      id: item.id, // Takes existing id for updates, or -1 for new products
       ...formData,
     }
-    
-    dispatch(updateProduct(updatedProduct))
-    
-    // Reset form to updated values
+
+    // Reset form
     setFormData({
-      imageSnapshot: formData.imageSnapshot,
-      product: formData.product,
-      price: formData.price,
-      discountedPrice: formData.discountedPrice,
-      stock: formData.stock,
-      avgRating: formData.avgRating,
-      category: formData.category,
+      imageSnapshot: '',
+      product: '',
+      price: '',
+      discountedPrice: '',
+      stock: '',
+      avgRating: '',
+      category: '',
     })
+    
+    dispatch(addProduct(newProduct))
   }
 
   const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
@@ -579,9 +521,7 @@ function TableCellViewer({ item }: { item: Product }) {
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.product}
-        </Button>
+        {trigger}
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader className="gap-1">
@@ -650,148 +590,16 @@ function TableCellViewer({ item }: { item: Product }) {
                 </SelectContent>
               </Select>
             </div>
-            <Button>Submit</Button>
-          </form>
-        </div>
-        <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
-  )
-}
-
-function AddProductButton() {
-  const isMobile = useIsMobile()
-
-  const dispatch = useAppDispatch()
-  const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
-    imageSnapshot: "https://placehold.co/400x400",
-    product: "",
-    price: "",
-    discountedPrice: "",
-    stock: "",
-    avgRating: "",
-    category: "",
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Generate a new ID (simple increment from existing products)
-    const newId = Date.now() // Using timestamp as ID for simplicity
-    
-    const newProduct: Product = {
-      id: newId,
-      ...formData,
-    }
-    
-    dispatch(addProduct(newProduct))
-    
-    // Reset form
-    setFormData({
-      imageSnapshot: "",
-      product: "",
-      price: "",
-      discountedPrice: "",
-      stock: "",
-      avgRating: "",
-      category: "",
-    })
-  }
-
-  const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="outline" size="sm">
-          <IconPlus />
-          <span className="hidden lg:inline">Add Product</span>
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{"New Product"}</DrawerTitle>
-          <DrawerDescription>
-            Showing total visitors for the last 6 months
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          <Separator />
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="product">Product</Label>
-              <Input 
-                id="product"
-                value={formData.product}
-                onChange={(e) => handleInputChange('product', e.target.value)}
-                placeholder="Enter product name"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="price">Price</Label>
-                <Input
-                  id="price"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="19.99$"
-                  required
-                />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="discounted-price">discounted Price</Label>
-                <Input
-                  id="discounted-price"
-                  value={formData.discountedPrice}
-                  onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
-                  placeholder="15.99$"
-                  required  
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="stock">Stock</Label>
+            <DrawerClose asChild>
               <Input
-                id="stock"
-                value={formData.stock}
-                onChange={(e) => handleInputChange('stock', e.target.value)}
-                placeholder="100"
-                required
+                type="submit"
+                value={'Submit'}
+                className={"bg-white"}
+                disabled={!formData.product || !formData.price|| !formData.discountedPrice || !formData.category || !formData.stock}
               />
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger id="category" className="w-full">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Kitchen">Kitchen</SelectItem>
-                  <SelectItem value="Clothing">Clothing</SelectItem>
-                  <SelectItem value="Furniture">Furniture</SelectItem>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button>Submit</Button>
+            </DrawerClose>
           </form>
         </div>
-        <DrawerFooter>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
       </DrawerContent>
     </Drawer>
   )

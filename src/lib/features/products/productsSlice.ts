@@ -59,7 +59,12 @@ export const productsSlice = createSlice({
       state.items = action.payload
     },
     addProduct: (state, action: PayloadAction<Product>) => {
-      state.items.push(action.payload)
+      if (action.payload.id !== -1) {
+        state.items[action.payload.id] = action.payload
+      } else {
+        action.payload.id = Date.now() // Assign a new id if not present
+        state.items.push(action.payload)
+      }
     },
     updateProduct: (state, action: PayloadAction<Product>) => {
       const index = state.items.findIndex((p) => p.id === action.payload.id)
