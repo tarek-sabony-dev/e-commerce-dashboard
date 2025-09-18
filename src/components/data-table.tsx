@@ -668,7 +668,7 @@ function AddProductButton() {
 
   const dispatch = useAppDispatch()
   const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
-    imageSnapshot: "/place-holder.png",
+    imageSnapshot: "https://placehold.co/400x400",
     product: "",
     price: "",
     discountedPrice: "",
