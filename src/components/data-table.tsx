@@ -191,7 +191,7 @@ const columns: ColumnDef<Product>[] = [
   {
     id: "actions",
     cell: ({ row }) => {
-      const dispatch = useAppDispatch();
+      // const dispatch = useAppDispatch();
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -210,7 +210,7 @@ const columns: ColumnDef<Product>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              onClick={() => dispatch(removeProduct(row.original.id))}
+              // onClick={() => dispatch(removeProduct(row.original.id))}
             >
               Delete
             </DropdownMenuItem>
