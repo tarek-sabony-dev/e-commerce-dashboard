@@ -80,7 +80,6 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { addProduct, Product, selectProducts, updateProduct, removeProduct } from "@/lib/features/products/productsSlice"
 
 const columns: ColumnDef<Product>[] = [
-
   {
     id: "select",
     header: ({ table }) => (
@@ -192,7 +191,7 @@ const columns: ColumnDef<Product>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <ActionsDropdownMenu id={row.original.id} />
+        <ActionsDropdownMenu item={row.original} />
       );
     },
   },
@@ -641,7 +640,7 @@ function ProductForm({
   )
 }
 
-function ActionsDropdownMenu({ id } : { id: number}){
+function ActionsDropdownMenu({ item } : { item: Product}){
   const dispatch = useAppDispatch();
   return (
     <DropdownMenu>
@@ -656,12 +655,28 @@ function ActionsDropdownMenu({ id } : { id: number}){
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <DropdownMenuItem>Edit</DropdownMenuItem>
-        <DropdownMenuItem>Make a copy</DropdownMenuItem>
+        <ProductForm
+          item={item} 
+          trigger={
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+          }
+        />
+        <DropdownMenuItem
+          onClick={() => {
+            const newProduct : Product = {
+              ...item,
+              id: -1,
+
+            }
+            dispatch(addProduct(newProduct))
+          }}
+        >
+          Duplicate
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"
-          onClick={() => dispatch(removeProduct(id))}
+          onClick={() => dispatch(removeProduct(item.id))}
         >
           Delete
         </DropdownMenuItem>
