@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { StarIcon } from "lucide-react"
 import Image from "next/image"
-import { Product } from "@/lib/features/products/productsSlice"
-import ProductForm from "./product-form"
-import ActionsDropdownMenu from "./actions-dropdown-menu"
+import { Product } from "@/lib/features/products/products-slice"
+import ProductForm from "../product-form"
+import ActionsDropdownMenu from "../actions-dropdown-menu"
 
-export const categoryColumns: ColumnDef<Product>[] = [
+export const productColumns: ColumnDef<Product>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -37,7 +37,7 @@ export const categoryColumns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "product",
-    header: "Category",
+    header: "Product",
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4 ">

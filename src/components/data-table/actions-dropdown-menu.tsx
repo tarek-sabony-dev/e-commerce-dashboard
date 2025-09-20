@@ -11,7 +11,7 @@ import {
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu"
 import { useAppDispatch } from "@/lib/hooks"
-import { addProduct, Product, removeProduct } from "@/lib/features/products/productsSlice"
+import { addProduct, Product, removeProduct } from "@/lib/features/products/products-slice"
 import ProductForm from "./product-form"
 
 export default function ActionsDropdownMenu({ item } : { item: Product }){

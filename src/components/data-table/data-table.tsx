@@ -4,16 +4,11 @@ import * as React from "react"
 
 import {
   IconChevronDown,
-  IconChevronLeft,
-  IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
   IconLayoutColumns,
   IconPlus,
 } from "@tabler/icons-react"
 import {
   ColumnFiltersState,
-  flexRender,
   getCoreRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
@@ -27,51 +22,164 @@ import {
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/lib/hooks"
-import { Product, selectProducts } from "@/lib/features/products/productsSlice"
+import { Product, selectProducts } from "@/lib/features/products/products-slice"
 import ProductForm from "./product-form"
-import { productColumns } from "./product-columns"
-import { categoryColumns } from "./category-columns"
+import { productColumns } from "./columns/product-columns"
+import { categoryColumns } from "./columns/category-columns"
+import { Category, selectCategories } from "@/lib/features/categories/categories-slice"
+import TableContent from "./table-content"
+
+// Skeleton loading component for table
+function TableSkeleton({ columnCount }: { columnCount: number }) {
+  return (
+    <>
+      <div className="overflow-hidden rounded-lg border">
+        <div className="bg-muted sticky top-0 z-10">
+          <div className="flex">
+            {Array.from({ length: columnCount }).map((_, index) => (
+              <div key={index} className="flex-1 p-4">
+                <Skeleton className="h-4 w-20" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="divide-y">
+          {Array.from({ length: 5 }).map((_, rowIndex) => (
+            <div key={rowIndex} className="flex">
+              {Array.from({ length: columnCount }).map((_, colIndex) => (
+                <div key={colIndex} className="flex-1 p-4">
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between px-4">
+        <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="flex w-full items-center gap-8 lg:w-fit">
+          <div className="hidden items-center gap-2 lg:flex">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-8 w-20" />
+          </div>
+          <div className="flex w-fit items-center justify-center text-sm font-medium">
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="ml-auto flex items-center gap-2 lg:ml-0">
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+            <Skeleton className="h-8 w-8" />
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
 
 export default function DataTable() {
-  // Extract products array from Redux store using the selectProducts selector
+  // Track active tab to optimize data selection
+  const [activeTab, setActiveTab] = React.useState("products")
+  
+  // Loading states
+  const [isLoadingProducts, setIsLoadingProducts] = React.useState(false)
+  const [isLoadingCategories, setIsLoadingCategories] = React.useState(false)
+  
+  // Only select data when the relevant tab is active
   const products : Product[] = useAppSelector(selectProducts)
-  const [data, setData] = React.useState(products)
+  const categories : Category[] = useAppSelector(selectCategories)
   
-  // Sync local data with Redux store when products change
+  const [productsData, setProductsData] = React.useState<Product[]>([])
+  const [categoriesData, setCategoriesData] = React.useState<Category[]>([])
+  
+  // Sync local data with Redux store when products change (only if products tab is active)
   React.useEffect(() => {
-    setData(products)
-  }, [products])
+    if (activeTab === "products") {
+      setIsLoadingProducts(true)
+      // Add 2-second delay to simulate data fetching
+      const timer = setTimeout(() => {
+        setProductsData(products)
+        setIsLoadingProducts(false)
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [products, activeTab])
+
+  // Sync local data with Redux store when categories change (only if categories tab is active)
+  React.useEffect(() => {
+    if (activeTab === "categories") {
+      setIsLoadingCategories(true)
+      // Add 2-second delay to simulate data fetching
+      const timer = setTimeout(() => {
+        setCategoriesData(categories)
+        setIsLoadingCategories(false)
+      }, 2000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [categories, activeTab])
   
-  const [rowSelection, setRowSelection] = React.useState({})
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [pagination, setPagination] = React.useState({
+  // Separate states for products and categories tables
+  const [productsRowSelection, setProductsRowSelection] = React.useState({})
+  const [productsColumnVisibility, setProductsColumnVisibility] = React.useState<VisibilityState>({})
+  const [productsColumnFilters, setProductsColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [productsSorting, setProductsSorting] = React.useState<SortingState>([])
+  const [productsPagination, setProductsPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
   })
 
+  const [categoriesRowSelection, setCategoriesRowSelection] = React.useState({})
+  const [categoriesColumnVisibility, setCategoriesColumnVisibility] = React.useState<VisibilityState>({})
+  const [categoriesColumnFilters, setCategoriesColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [categoriesSorting, setCategoriesSorting] = React.useState<SortingState>([])
+  const [categoriesPagination, setCategoriesPagination] = React.useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    // Trigger loading states when switching tabs
+    if (value === "products") {
+      setIsLoadingProducts(true)
+      setTimeout(() => {
+        setProductsData(products)
+        setIsLoadingProducts(false)
+      }, 2000)
+    } else if (value === "categories") {
+      setIsLoadingCategories(true)
+      setTimeout(() => {
+        setCategoriesData(categories)
+        setIsLoadingCategories(false)
+      }, 2000)
+    }
+  }
+
   const productsTable = useReactTable({
-    data,
+    data: productsData,
     columns: productColumns,
     state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      pagination,
+      sorting: productsSorting,
+      columnVisibility: productsColumnVisibility,
+      rowSelection: productsRowSelection,
+      columnFilters: productsColumnFilters,
+      pagination: productsPagination,
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
+    onRowSelectionChange: setProductsRowSelection,
+    onSortingChange: setProductsSorting,
+    onColumnFiltersChange: setProductsColumnFilters,
+    onColumnVisibilityChange: setProductsColumnVisibility,
+    onPaginationChange: setProductsPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -81,22 +189,22 @@ export default function DataTable() {
   })
 
   const categoriesTable = useReactTable({
-    data,
+    data: categoriesData,
     columns: categoryColumns,
     state: {
-      sorting,
-      columnVisibility,
-      rowSelection,
-      columnFilters,
-      pagination,
+      sorting: categoriesSorting,
+      columnVisibility: categoriesColumnVisibility,
+      rowSelection: categoriesRowSelection,
+      columnFilters: categoriesColumnFilters,
+      pagination: categoriesPagination,
     },
     getRowId: (row) => row.id.toString(),
     enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
+    onRowSelectionChange: setCategoriesRowSelection,
+    onSortingChange: setCategoriesSorting,
+    onColumnFiltersChange: setCategoriesColumnFilters,
+    onColumnVisibilityChange: setCategoriesColumnVisibility,
+    onPaginationChange: setCategoriesPagination,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -108,6 +216,7 @@ export default function DataTable() {
   return (
     <Tabs
       defaultValue="products"
+      onValueChange={handleTabChange}
       className="w-full flex-col justify-start gap-6"
     >
       <div className="flex items-center justify-between flex-wrap gap-4 px-4 lg:px-6 ">
@@ -133,7 +242,7 @@ export default function DataTable() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {productsTable
+              {(activeTab === "products" ? productsTable : categoriesTable)
                 .getAllColumns()
                 .filter(
                   (column) =>
@@ -181,265 +290,21 @@ export default function DataTable() {
         value="products"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              {productsTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {productsTable.getRowModel().rows?.length ? (
-                productsTable.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={productColumns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {productsTable.getFilteredSelectedRowModel().rows.length} of{" "}
-            {productsTable.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${productsTable.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  productsTable.setPageSize(Number(value))
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={productsTable.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {productsTable.getState().pagination.pageIndex + 1} of{" "}
-              {productsTable.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => productsTable.setPageIndex(0)}
-                disabled={!productsTable.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => productsTable.previousPage()}
-                disabled={!productsTable.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => productsTable.nextPage()}
-                disabled={!productsTable.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => productsTable.setPageIndex(productsTable.getPageCount() - 1)}
-                disabled={!productsTable.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
+        {isLoadingProducts ? (
+          <TableSkeleton columnCount={productColumns.length} />
+        ) : (
+          <TableContent table={productsTable} columnCount={productColumns.length} />
+        )}
       </TabsContent>
       <TabsContent
         value="categories"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader className="bg-muted sticky top-0 z-10">
-              {categoriesTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} colSpan={header.colSpan}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {categoriesTable.getRowModel().rows?.length ? (
-                categoriesTable.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={productColumns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="flex items-center justify-between px-4">
-          <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-            {categoriesTable.getFilteredSelectedRowModel().rows.length} of{" "}
-            {categoriesTable.getFilteredRowModel().rows.length} row(s) selected.
-          </div>
-          <div className="flex w-full items-center gap-8 lg:w-fit">
-            <div className="hidden items-center gap-2 lg:flex">
-              <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
-              </Label>
-              <Select
-                value={`${categoriesTable.getState().pagination.pageSize}`}
-                onValueChange={(value) => {
-                  categoriesTable.setPageSize(Number(value))
-                }}
-              >
-                <SelectTrigger size="sm" className="w-20" id="rows-per-page">
-                  <SelectValue
-                    placeholder={categoriesTable.getState().pagination.pageSize}
-                  />
-                </SelectTrigger>
-                <SelectContent side="top">
-                  {[10, 20, 30, 40, 50].map((pageSize) => (
-                    <SelectItem key={pageSize} value={`${pageSize}`}>
-                      {pageSize}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {categoriesTable.getState().pagination.pageIndex + 1} of{" "}
-              {categoriesTable.getPageCount()}
-            </div>
-            <div className="ml-auto flex items-center gap-2 lg:ml-0">
-              <Button
-                variant="outline"
-                className="hidden h-8 w-8 p-0 lg:flex"
-                onClick={() => categoriesTable.setPageIndex(0)}
-                disabled={!categoriesTable.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to first page</span>
-                <IconChevronsLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => categoriesTable.previousPage()}
-                disabled={!categoriesTable.getCanPreviousPage()}
-              >
-                <span className="sr-only">Go to previous page</span>
-                <IconChevronLeft />
-              </Button>
-              <Button
-                variant="outline"
-                className="size-8"
-                size="icon"
-                onClick={() => categoriesTable.nextPage()}
-                disabled={!categoriesTable.getCanNextPage()}
-              >
-                <span className="sr-only">Go to next page</span>
-                <IconChevronRight />
-              </Button>
-              <Button
-                variant="outline"
-                className="hidden size-8 lg:flex"
-                size="icon"
-                onClick={() => categoriesTable.setPageIndex(categoriesTable.getPageCount() - 1)}
-                disabled={!categoriesTable.getCanNextPage()}
-              >
-                <span className="sr-only">Go to last page</span>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
+        {isLoadingCategories ? (
+          <TableSkeleton columnCount={categoryColumns.length} />
+        ) : (
+          <TableContent table={categoriesTable} columnCount={categoryColumns.length} />
+        )}
       </TabsContent>
     </Tabs>
   )

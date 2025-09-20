@@ -23,7 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAppDispatch } from "@/lib/hooks"
-import { addProduct, Product, updateProduct } from "@/lib/features/products/productsSlice"
+import { addProduct, Product, updateProduct } from "@/lib/features/products/products-slice"
 
 export default function ProductForm({
   item,
