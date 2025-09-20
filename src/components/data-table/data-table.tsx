@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/lib/hooks"
 import { Product, selectProducts } from "@/lib/features/products/products-slice"
@@ -32,63 +31,9 @@ import { categoryColumns } from "./columns/category-columns"
 import { Category, selectCategories } from "@/lib/features/categories/categories-slice"
 import TableContent from "./table-content"
 
-// Skeleton loading component for table
-function TableSkeleton({ columnCount }: { columnCount: number }) {
-  return (
-    <>
-      <div className="overflow-hidden rounded-lg border">
-        <div className="bg-muted sticky top-0 z-10">
-          <div className="flex">
-            {Array.from({ length: columnCount }).map((_, index) => (
-              <div key={index} className="flex-1 p-4">
-                <Skeleton className="h-4 w-20" />
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="divide-y">
-          {Array.from({ length: 5 }).map((_, rowIndex) => (
-            <div key={rowIndex} className="flex">
-              {Array.from({ length: columnCount }).map((_, colIndex) => (
-                <div key={colIndex} className="flex-1 p-4">
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center justify-between px-4">
-        <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-          <Skeleton className="h-4 w-32" />
-        </div>
-        <div className="flex w-full items-center gap-8 lg:w-fit">
-          <div className="hidden items-center gap-2 lg:flex">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-8 w-20" />
-          </div>
-          <div className="flex w-fit items-center justify-center text-sm font-medium">
-            <Skeleton className="h-4 w-24" />
-          </div>
-          <div className="ml-auto flex items-center gap-2 lg:ml-0">
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-8 w-8" />
-            <Skeleton className="h-8 w-8" />
-          </div>
-        </div>
-      </div>
-    </>
-  )
-}
-
 export default function DataTable() {
   // Track active tab to optimize data selection
   const [activeTab, setActiveTab] = React.useState("products")
-  
-  // Loading states
-  const [isLoadingProducts, setIsLoadingProducts] = React.useState(false)
-  const [isLoadingCategories, setIsLoadingCategories] = React.useState(false)
   
   // Only select data when the relevant tab is active
   const products : Product[] = useAppSelector(selectProducts)
@@ -100,28 +45,14 @@ export default function DataTable() {
   // Sync local data with Redux store when products change (only if products tab is active)
   React.useEffect(() => {
     if (activeTab === "products") {
-      setIsLoadingProducts(true)
-      // Add 2-second delay to simulate data fetching
-      const timer = setTimeout(() => {
-        setProductsData(products)
-        setIsLoadingProducts(false)
-      }, 2000)
-      
-      return () => clearTimeout(timer)
+      setProductsData(products)
     }
   }, [products, activeTab])
 
   // Sync local data with Redux store when categories change (only if categories tab is active)
   React.useEffect(() => {
     if (activeTab === "categories") {
-      setIsLoadingCategories(true)
-      // Add 2-second delay to simulate data fetching
-      const timer = setTimeout(() => {
-        setCategoriesData(categories)
-        setIsLoadingCategories(false)
-      }, 2000)
-      
-      return () => clearTimeout(timer)
+      setCategoriesData(categories)
     }
   }, [categories, activeTab])
   
@@ -147,19 +78,10 @@ export default function DataTable() {
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value)
-    // Trigger loading states when switching tabs
     if (value === "products") {
-      setIsLoadingProducts(true)
-      setTimeout(() => {
-        setProductsData(products)
-        setIsLoadingProducts(false)
-      }, 2000)
+      setProductsData(products)
     } else if (value === "categories") {
-      setIsLoadingCategories(true)
-      setTimeout(() => {
-        setCategoriesData(categories)
-        setIsLoadingCategories(false)
-      }, 2000)
+      setCategoriesData(categories)
     }
   }
 
@@ -290,21 +212,13 @@ export default function DataTable() {
         value="products"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        {isLoadingProducts ? (
-          <TableSkeleton columnCount={productColumns.length} />
-        ) : (
-          <TableContent table={productsTable} columnCount={productColumns.length} />
-        )}
+        <TableContent table={productsTable} columnCount={productColumns.length} />
       </TabsContent>
       <TabsContent
         value="categories"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
       >
-        {isLoadingCategories ? (
-          <TableSkeleton columnCount={categoryColumns.length} />
-        ) : (
-          <TableContent table={categoriesTable} columnCount={categoryColumns.length} />
-        )}
+        <TableContent table={categoriesTable} columnCount={categoryColumns.length} />
       </TabsContent>
     </Tabs>
   )
