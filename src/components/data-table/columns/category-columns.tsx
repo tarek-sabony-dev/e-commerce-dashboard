@@ -2,6 +2,8 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Category } from "@/lib/features/categories/categories-slice"
+import { CategoryForm } from "../drawer-forms"
+import ActionsDropdownMenu from "../actions-dropdown-menu"
 
 export const categoryColumns: ColumnDef<Category>[] = [
   {
@@ -35,16 +37,15 @@ export const categoryColumns: ColumnDef<Category>[] = [
     header: "Category",
     cell: ({ row }) => {
       return (
-        <div className="flex items-center gap-4 ">
-          {/* <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" />  */}
-          {/* <ProductForm 
+        <div className="flex bg-white/50 items-center ">
+          <CategoryForm 
             item={row.original}
             trigger={
-            } 
-          /> */}
               <Button variant="link" className="text-foreground w-fit px-0 text-left">
                 {row.original.name}
               </Button>
+            } 
+          />
         </div>
       ) 
     },
@@ -52,12 +53,9 @@ export const categoryColumns: ColumnDef<Category>[] = [
   },
   {
     id: "actions",
-    cell: () => {
+    cell: ({ row }) => {
       return (
-        <div>
-          dots for actions
-        </div>
-        // <ActionsDropdownMenu item={row.original} />
+        <ActionsDropdownMenu table="categories" item={row.original} />
       );
     },
   },

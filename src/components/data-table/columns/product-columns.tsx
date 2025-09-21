@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { StarIcon } from "lucide-react"
 import Image from "next/image"
 import { Product } from "@/lib/features/products/products-slice"
-import ProductForm from "../product-form"
+import { ProductForm } from "../drawer-forms"
 import ActionsDropdownMenu from "../actions-dropdown-menu"
 
 export const productColumns: ColumnDef<Product>[] = [
@@ -120,7 +120,7 @@ export const productColumns: ColumnDef<Product>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <ActionsDropdownMenu item={row.original} />
+        <ActionsDropdownMenu table="products" item={row.original} />
       );
     },
   },

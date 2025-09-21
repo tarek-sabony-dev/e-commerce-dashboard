@@ -12,10 +12,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAppDispatch } from "@/lib/hooks"
 import { addProduct, Product, removeProduct } from "@/lib/features/products/products-slice"
-import ProductForm from "./product-form"
+import { CategoryForm, ProductForm } from "./drawer-forms"
+import { addCategory, Category, removeCategory } from "@/lib/features/categories/categories-slice"
 
-export default function ActionsDropdownMenu({ item } : { item: Product }){
-  const dispatch = useAppDispatch();
+export default function ActionsDropdownMenu({ item, table } : { item: any, table: string }){
+  const dispatch = useAppDispatch()
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,31 +31,63 @@ export default function ActionsDropdownMenu({ item } : { item: Product }){
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-32">
-        <ProductForm
-          item={item} 
-          trigger={
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
-          }
-        />
-        <DropdownMenuItem
-          onClick={() => {
-            const newProduct : Product = {
-              ...item,
-              id: -1,
-
+        {table === "products" ?
+          <ProductForm
+            item={item} 
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
             }
-            dispatch(addProduct(newProduct))
-          }}
-        >
-          Duplicate
-        </DropdownMenuItem>
+          />
+          :
+          <CategoryForm
+            item={item} 
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
+            }
+          />
+        }
+        {table === "products" ?
+          <DropdownMenuItem
+            onClick={() => {
+              const newProduct : Product = {
+                ...item,
+                id: -1,
+                
+              }
+              dispatch(addProduct(newProduct))
+            }}
+          >
+            Duplicate
+          </DropdownMenuItem>
+          :
+          <DropdownMenuItem
+            onClick={() => {
+              const newCategory : Category = {
+                ...item,
+                id: -1,   
+              }
+              dispatch(addCategory(newCategory))
+            }}
+          >
+            Duplicate
+          </DropdownMenuItem>
+        }
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          onClick={() => dispatch(removeProduct(item.id))}
-        >
-          Delete
-        </DropdownMenuItem>
+          {table === "products" ?
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => dispatch(removeProduct(item.id))}
+          >
+            Delete
+          </DropdownMenuItem>
+          :
+          <DropdownMenuItem
+            variant="destructive"
+            onClick={() => dispatch(removeCategory(item.id))}
+          >
+            Delete
+          </DropdownMenuItem>
+        }
       </DropdownMenuContent>
     </DropdownMenu>
   )

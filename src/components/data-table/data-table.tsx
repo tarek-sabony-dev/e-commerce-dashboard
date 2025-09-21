@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/lib/hooks"
 import { Product, selectProducts } from "@/lib/features/products/products-slice"
-import ProductForm from "./product-form"
+import { CategoryForm, ProductForm } from "./drawer-forms"
 import { productColumns } from "./columns/product-columns"
 import { categoryColumns } from "./columns/category-columns"
 import { Category, selectCategories } from "@/lib/features/categories/categories-slice"
@@ -187,25 +187,40 @@ export default function DataTable() {
                 })}
             </DropdownMenuContent>
           </DropdownMenu>
-          <ProductForm
-            item={{
-              id: -1,
-              imageSnapshot: "https://placehold.co/600x400.png",
-              product: "",
-              description: "",
-              price: 0,
-              discountedPrice: 0,
-              stock: 0,
-              avgRating: 0,
-              category: "",
-            }}
-            trigger={
-              <Button variant="outline" size="sm">
-                <IconPlus />
-                <span className="hidden lg:inline">Add Product</span>
-              </Button>
-            } 
-          />
+          {activeTab === "products" ? 
+            <ProductForm
+              item={{
+                id: -1,
+                imageSnapshot: "https://placehold.co/600x400.png",
+                product: "",
+                description: "",
+                price: 0,
+                discountedPrice: 0,
+                stock: 0,
+                avgRating: 0,
+                category: "",
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <IconPlus />
+                  <span className="hidden lg:inline">Add Product</span>
+                </Button>
+              } 
+            />
+            :
+            <CategoryForm
+              item={{
+                id: -1,
+                name: ''
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <IconPlus />
+                  <span className="hidden lg:inline">Add Category</span>
+                </Button>
+              } 
+            />
+          }
         </div>
       </div>
       <TabsContent

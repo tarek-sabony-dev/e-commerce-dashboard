@@ -24,8 +24,9 @@ import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { useAppDispatch } from "@/lib/hooks"
 import { addProduct, Product, updateProduct } from "@/lib/features/products/products-slice"
+import { addCategory, Category, updateCategory } from "@/lib/features/categories/categories-slice"
 
-export default function ProductForm({
+function ProductForm({
   item,
   trigger
 }: {
@@ -194,7 +195,7 @@ export default function ProductForm({
               type="submit"
               value={'Submit'}
               className={"bg-white"}
-              disabled={!formData.product || !formData.price|| !formData.discountedPrice || !formData.category || !formData.stock}
+              disabled={!formData.product || !formData.price || !formData.discountedPrice || !formData.category || !formData.stock}
             >
               Submit
             </Button>
@@ -208,4 +209,107 @@ export default function ProductForm({
       </DrawerContent>
     </Drawer>
   )
+}
+
+function CategoryForm({
+  item,
+  trigger
+}: {
+  item: Category,
+  trigger?: React.ReactNode
+}) {
+  const isMobile = useIsMobile()
+  const dispatch = useAppDispatch()
+  const [formData, setFormData] = React.useState<Omit<Category, 'id'>>({
+    name: item.name
+  })
+
+  React.useEffect(() => {
+    setFormData({
+      name: item.name
+    });
+  }, [item]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    const categoryData: Category = {
+      id: item.id,
+      ...formData,
+    }
+    
+    if (item.id === -1) {
+      dispatch(addCategory(categoryData))
+    } else {
+      dispatch(updateCategory(categoryData))
+    }
+
+    // Reset form to initial state of the item
+    setFormData({
+      name: item.name
+    })
+  }
+
+  const handleInputChange = (field: keyof Omit<Category, 'id'>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleDrawerClose = () => {
+    setFormData({
+      name: item.name
+    })
+  }
+
+  return (
+    <Drawer onClose={handleDrawerClose} direction={isMobile ? "bottom" : "right"}>
+      <DrawerTrigger asChild>
+        {trigger}
+      </DrawerTrigger>
+      <DrawerContent>
+        <DrawerHeader className="gap-1">
+          <DrawerTitle>{item.name}</DrawerTitle>
+          <DrawerDescription>
+            {item.id === -1 ? "Add a new product to the store." : `Editing ${item.name}`}
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
+          <Separator />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
+              <Label htmlFor="category">Category</Label>
+              <Input 
+                id="category"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Enter category name"
+                required
+              />
+            </div>
+            
+            <Button
+              type="submit"
+              value={'Submit'}
+              className={"bg-white"}
+              disabled={!formData.name || formData.name === item.name}
+            >
+              Submit
+            </Button>
+            <DrawerClose asChild>
+              <Button variant={"destructive"}>
+                Cancel
+              </Button>
+            </DrawerClose>
+          </form>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  )
+}
+
+export {
+  ProductForm, 
+  CategoryForm
 }
