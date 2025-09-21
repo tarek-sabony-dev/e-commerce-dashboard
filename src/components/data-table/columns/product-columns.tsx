@@ -120,7 +120,9 @@ export const productColumns: ColumnDef<Product>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <ActionsDropdownMenu table="products" item={row.original} />
+        <div className="flex justify-end">
+          <ActionsDropdownMenu table="products" item={row.original} />
+        </div>
       );
     },
   },

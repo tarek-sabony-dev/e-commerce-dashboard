@@ -15,7 +15,7 @@ import { addProduct, Product, removeProduct } from "@/lib/features/products/prod
 import { CategoryForm, ProductForm } from "./drawer-forms"
 import { addCategory, Category, removeCategory } from "@/lib/features/categories/categories-slice"
 
-export default function ActionsDropdownMenu({ item, table } : { item: any, table: string }){
+export default function ActionsDropdownMenu({ item, table } : { item: Product | Category, table: string }){
   const dispatch = useAppDispatch()
 
   return (
@@ -33,14 +33,14 @@ export default function ActionsDropdownMenu({ item, table } : { item: any, table
       <DropdownMenuContent align="end" className="w-32">
         {table === "products" ?
           <ProductForm
-            item={item} 
+            item={item as Product}
             trigger={
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
             }
           />
           :
           <CategoryForm
-            item={item} 
+            item={item as Category} 
             trigger={
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Edit</DropdownMenuItem>
             }
@@ -50,7 +50,7 @@ export default function ActionsDropdownMenu({ item, table } : { item: any, table
           <DropdownMenuItem
             onClick={() => {
               const newProduct : Product = {
-                ...item,
+                ...(item as Product),
                 id: -1,
                 
               }
@@ -63,7 +63,7 @@ export default function ActionsDropdownMenu({ item, table } : { item: any, table
           <DropdownMenuItem
             onClick={() => {
               const newCategory : Category = {
-                ...item,
+                ...(item as Category),
                 id: -1,   
               }
               dispatch(addCategory(newCategory))

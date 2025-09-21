@@ -37,7 +37,7 @@ export const categoryColumns: ColumnDef<Category>[] = [
     header: "Category",
     cell: ({ row }) => {
       return (
-        <div className="flex bg-white/50 items-center ">
+        <div className="flex items-center ">
           <CategoryForm 
             item={row.original}
             trigger={
@@ -55,7 +55,9 @@ export const categoryColumns: ColumnDef<Category>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <ActionsDropdownMenu table="categories" item={row.original} />
+        <div className="flex justify-end">
+          <ActionsDropdownMenu table="categories" item={row.original} />
+        </div>
       );
     },
   },
