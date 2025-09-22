@@ -11,6 +11,15 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -22,92 +31,70 @@ import {
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { useAppDispatch } from "@/lib/hooks"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks"
 import { addProduct, Product, updateProduct } from "@/lib/features/products/products-slice"
-import { addCategory, Category, updateCategory } from "@/lib/features/categories/categories-slice"
+import { addCategory, Category, selectCategories, updateCategory } from "@/lib/features/categories/categories-slice"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 
-function ProductForm({
-  item,
-  trigger
-}: {
-  item: Product,
-  trigger?: React.ReactNode
-}) {
+const productFormSchema = z.object({
+  imageSnapShot: z.string().min(1, { message: 'image name is required' }).max(200, { message: 'image name is too long' }),
+  product: z.string().min(1, { message: 'Product name is required' }).max(200, { message: 'Product name is too long' }),
+  description: z.string().max(1000, { message: 'Description is too long' }),
+  price: z.number().min(0, { message: 'Price must be >= 0' }),
+  discountedPrice: z.number().min(0, { message: 'Discounted price must be >= 0' }),
+  stock: z.number().int({ message: 'Stock must be an integer' }).min(0, { message: 'Stock cannot be negative' }),
+  category: z.string().min(1, { message: 'Category is required' }).max(100),  
+})
+
+const categoryFormSchema = z.object({
+  name: z.string().min(1, { message: 'Name is required' }).max(100, { message: 'Name must be 100 characters or less' }),
+})
+
+function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNode }){
   const isMobile = useIsMobile()
   const dispatch = useAppDispatch()
-  const [formData, setFormData] = React.useState<Omit<Product, 'id'>>({
-    imageSnapshot: item.imageSnapshot,
-    product: item.product,
-    price: item.price,
-    description: item.description,
-    discountedPrice: item.discountedPrice,
-    stock: item.stock,
-    avgRating: item.avgRating,
-    category: item.category,
-  })
-
-  React.useEffect(() => {
-    setFormData({
-      imageSnapshot: item.imageSnapshot,
+  const categories : Category[] = useAppSelector(selectCategories)
+  const form = useForm<z.infer<typeof productFormSchema>>({
+    resolver: zodResolver(productFormSchema),
+    defaultValues: {
+      imageSnapShot: item.imageSnapshot,
       product: item.product,
       price: item.price,
       description: item.description,
       discountedPrice: item.discountedPrice,
       stock: item.stock,
-      avgRating: item.avgRating,
       category: item.category,
-    });
-  }, [item]);
+    },
+  })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  function onSubmit(values: z.infer<typeof productFormSchema>) {
+    // This will be type-safe and validated.
+    z.coerce.number().parse(values.price)
+    z.coerce.number().parse(values.discountedPrice)
+    z.coerce.number().parse(values.stock)
     
     const productData: Product = {
       id: item.id,
-      ...formData,
+      imageSnapshot: "/cup.png", // Placeholder image
+      avgRating: item.avgRating,
+      ...values,
     }
-    
+
+    // (id === -1) means a new category
+    const isNewProduct = item.id === -1
+    isNewProduct ? dispatch(addProduct(productData)) : dispatch(updateProduct(productData))
+  }
+
+  React.useEffect(() => {
     if (item.id === -1) {
-      dispatch(addProduct(productData))
-    } else {
-      dispatch(updateProduct(productData))
+      form.reset()
     }
-
-    // Reset form to initial state of the item
-    setFormData({
-      imageSnapshot: item.imageSnapshot,
-      product: item.product,
-      price: item.price,
-      description: item.description,
-      discountedPrice: item.discountedPrice,
-      stock: item.stock,
-      avgRating: item.avgRating,
-      category: item.category,
-    })
-  }
-
-  const handleInputChange = (field: keyof Omit<Product, 'id'>, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const handleDrawerClose = () => {
-    setFormData({
-      imageSnapshot: item.imageSnapshot,
-      product: item.product,
-      price: item.price,
-      description: item.description,
-      discountedPrice: item.discountedPrice,
-      stock: item.stock,
-      avgRating: item.avgRating,
-      category: item.category,
-    })
-  }
+  }, [item]);
 
   return (
-    <Drawer onClose={handleDrawerClose} direction={isMobile ? "bottom" : "right"}>
+    <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
         {trigger}
       </DrawerTrigger>
@@ -120,151 +107,159 @@ function ProductForm({
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           <Separator />
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="product">Product</Label>
-              <Input 
-                id="product"
-                value={formData.product}
-                onChange={(e) => handleInputChange('product', e.target.value)}
-                placeholder="Enter product name"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              <FormField 
+                control={form.control}
+                name="product"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Product</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter product name" {...field}/>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Enter product description"
-                required
+              <FormField 
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter product description" {...field}/>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="price">Price</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => handleInputChange('price', e.target.value)}
-                  placeholder="19.99$"
-                  required
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField 
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Price</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="19.99$" 
+                          {...field}
+                          onChange={(e) => field.onChange(z.coerce.number().parse(e.target.value))}    
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField 
+                  control={form.control}
+                  name="discountedPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Discounted Price</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="15.99$" 
+                          {...field}
+                          onChange={(e) => field.onChange(z.coerce.number().parse(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="discounted-price">discounted Price</Label>
-                <Input
-                  id="discounted-price"
-                  type="number"
-                  value={formData.discountedPrice}
-                  onChange={(e) => handleInputChange('discountedPrice', e.target.value)}
-                  placeholder="15.99$"
-                  required  
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                type="number"
-                value={formData.stock}
-                onChange={(e) => handleInputChange('stock', e.target.value)}
-                placeholder="100"
-                required
+              <FormField 
+                control={form.control}
+                name="stock"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stock</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="100"
+                        {...field}
+                        onChange={(e) => field.onChange(z.coerce.number().parse(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="category">Category</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger id="category" className="w-full">
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Kitchen">Kitchen</SelectItem>
-                  <SelectItem value="Clothing">Clothing</SelectItem>
-                  <SelectItem value="Furniture">Furniture</SelectItem>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              type="submit"
-              value={'Submit'}
-              className={"bg-white"}
-              disabled={!formData.product || !formData.price || !formData.discountedPrice || !formData.category || !formData.stock}
-            >
-              Submit
-            </Button>
-            <DrawerClose asChild>
-              <Button variant={"destructive"}>
-                Cancel
+              <FormField 
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger id="category" className="w-full">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit">
+                Submit
               </Button>
-            </DrawerClose>
-          </form>
+              <DrawerClose asChild>
+                <Button variant={"destructive"}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </form>
+          </Form>
         </div>
       </DrawerContent>
     </Drawer>
   )
 }
 
-function CategoryForm({
-  item,
-  trigger
-}: {
-  item: Category,
-  trigger?: React.ReactNode
-}) {
+function CategoryForm({ item, trigger }: { item: Category, trigger?: React.ReactNode }){
   const isMobile = useIsMobile()
   const dispatch = useAppDispatch()
-  const [formData, setFormData] = React.useState<Omit<Category, 'id'>>({
-    name: item.name
+  const form = useForm<z.infer<typeof categoryFormSchema>>({
+    resolver: zodResolver(categoryFormSchema),
+    defaultValues: {
+      name: item.name,
+    },
   })
 
-  React.useEffect(() => {
-    setFormData({
-      name: item.name
-    });
-  }, [item]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    
+  function onSubmit(values: z.infer<typeof categoryFormSchema>) {
+    // This will be type-safe and validated.
     const categoryData: Category = {
       id: item.id,
-      ...formData,
+      ...values,
     }
-    
+
+    // (id === -1) means a new category
+    const isNewCategory = item.id === -1
+    isNewCategory ? dispatch(addCategory(categoryData)) : dispatch(updateCategory(categoryData))
+  }
+
+  React.useEffect(() => {
     if (item.id === -1) {
-      dispatch(addCategory(categoryData))
-    } else {
-      dispatch(updateCategory(categoryData))
+      form.reset()
     }
-
-    // Reset form to initial state of the item
-    setFormData({
-      name: item.name
-    })
-  }
-
-  const handleInputChange = (field: keyof Omit<Category, 'id'>, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const handleDrawerClose = () => {
-    setFormData({
-      name: item.name
-    })
-  }
+  }, [item])
 
   return (
-    <Drawer onClose={handleDrawerClose} direction={isMobile ? "bottom" : "right"}>
+    <Drawer direction={isMobile ? "bottom" : "right"}>
       <DrawerTrigger asChild>
         {trigger}
       </DrawerTrigger>
@@ -277,32 +272,31 @@ function CategoryForm({
         </DrawerHeader>
         <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
           <Separator />
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="category">Category</Label>
-              <Input 
-                id="category"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Enter category name"
-                required
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              <FormField 
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="New category name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <Button
-              type="submit"
-              value={'Submit'}
-              className={"bg-white"}
-              disabled={!formData.name || formData.name === item.name}
-            >
-              Submit
-            </Button>
-            <DrawerClose asChild>
-              <Button variant={"destructive"}>
-                Cancel
+              <Button type="submit">
+                Submit
               </Button>
-            </DrawerClose>
-          </form>
+              <DrawerClose asChild>
+                <Button variant={"destructive"}>
+                  Cancel
+                </Button>
+              </DrawerClose>
+            </form>
+          </Form>
         </div>
       </DrawerContent>
     </Drawer>
