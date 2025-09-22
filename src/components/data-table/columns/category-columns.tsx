@@ -55,7 +55,7 @@ export const categoryColumns: ColumnDef<Category>[] = [
     id: "actions",
     cell: ({ row }) => {
       return (
-        <div className="flex justify-end">
+        <div className="flex justify-end pr-4">
           <ActionsDropdownMenu table="categories" item={row.original} />
         </div>
       );
