@@ -4,6 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Category } from "@/lib/features/categories/categories-slice"
 import { CategoryForm } from "../drawer-forms"
 import ActionsDropdownMenu from "../actions-dropdown-menu"
+import { ArrowUpDown } from "lucide-react"
 
 export const categoryColumns: ColumnDef<Category>[] = [
   {
@@ -34,7 +35,18 @@ export const categoryColumns: ColumnDef<Category>[] = [
   },
   {
     accessorKey: "name",
-    header: "Category",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          className=""
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Category
+          <ArrowUpDown size={16} />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       return (
         <div className="flex items-center ">

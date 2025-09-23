@@ -2,11 +2,12 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { StarIcon } from "lucide-react"
+import { ArrowUpDown, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { Product } from "@/lib/features/products/products-slice"
 import { ProductForm } from "../drawer-forms"
 import ActionsDropdownMenu from "../actions-dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export const productColumns: ColumnDef<Product>[] = [
   {
@@ -37,7 +38,18 @@ export const productColumns: ColumnDef<Product>[] = [
   },
   {
     accessorKey: "product",
-    header: "Product",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          className=""
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Product
+          <ArrowUpDown size={16} />
+        </Button>
+      )
+    },
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4 ">
@@ -59,14 +71,34 @@ export const productColumns: ColumnDef<Product>[] = [
     accessorKey: "description",
     header: "Description",
     cell: ({ row }) => (
-      <div className="w-32 truncate">
-        {row.original.description}
-      </div>
+      <Tooltip>
+        <TooltipTrigger>
+          <div className="w-32 truncate">
+            {row.original.description}
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="w-fit max-w-64 h-fit flex justify-center items-center">
+            {row.original.description}
+          </p>
+        </TooltipContent>
+      </Tooltip>
     ),
   },
   {
     accessorKey: "price",
-    header: "Price",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="outline"
+          className=""
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Price
+          <ArrowUpDown size={16} />
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <div className="w-32">
         <Badge variant="outline" className="text-muted-foreground px-1.5">

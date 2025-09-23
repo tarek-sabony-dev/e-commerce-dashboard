@@ -65,7 +65,7 @@ export default function DataTable() {
     pageIndex: 0,
     pageSize: 10,
   })
-
+  
   const [categoriesRowSelection, setCategoriesRowSelection] = React.useState({})
   const [categoriesColumnVisibility, setCategoriesColumnVisibility] = React.useState<VisibilityState>({})
   const [categoriesColumnFilters, setCategoriesColumnFilters] = React.useState<ColumnFiltersState>([])
