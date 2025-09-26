@@ -9,6 +9,7 @@ import {
   IconChevronsRight,
   IconLayoutColumns,
   IconPlus,
+  IconTrash,
 } from "@tabler/icons-react"
 import {
   ColumnDef,
@@ -33,6 +34,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { CategoryForm, ProductForm } from "./drawer-forms"
 import { Input } from "../ui/input"
+import { removeProduct } from "@/lib/features/products/products-slice"
+import { useAppDispatch } from "@/lib/hooks"
+import { removeCategory } from "@/lib/features/categories/categories-slice"
 
 interface TableContentProps<TData> {
   columns: ColumnDef<TData>[]
@@ -41,6 +45,7 @@ interface TableContentProps<TData> {
 }
 
 export default function DataTable<TData>({ columns, data, activeTab }: TableContentProps<TData>) {
+  const dispatch = useAppDispatch()
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -49,6 +54,18 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
     pageIndex: 0,
     pageSize: 10,
   })
+
+  // handle deletion of multiple items
+  const handleDeleteMany = (selectedIds : number[]) => {
+    selectedIds.map((id) => {
+      if (activeTab === "products") {
+        dispatch(removeProduct(id))
+      } else {
+        dispatch(removeCategory(id))
+      }
+    })
+    setRowSelection({})
+  }
 
   const table = useReactTable({
     data,
@@ -76,7 +93,7 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
 
   return (
     <>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-2">
         {activeTab === "products" ? 
           <Input
             placeholder="Filter product..."
@@ -97,6 +114,15 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
           />
         }
         <div className="flex items-center gap-2">
+          <Button 
+            variant="destructive"
+            size="sm"
+            disabled={table.getSelectedRowModel().rows.length === 0}
+            onClick={() => handleDeleteMany(table.getSelectedRowModel().rows.map((row) => (row.original as any).id))}
+          >
+            <IconTrash />
+            <span className="hidden lg:inline">Delete</span>
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
