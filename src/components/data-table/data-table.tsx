@@ -32,6 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { CategoryForm, ProductForm } from "./drawer-forms"
+import { Input } from "../ui/input"
 
 interface TableContentProps<TData> {
   columns: ColumnDef<TData>[]
@@ -75,70 +76,91 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
 
   return (
     <>
-      <div className="flex justify-end items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <IconLayoutColumns />
-              <span className="hidden lg:inline">Customize Columns</span>
-              <span className="lg:hidden">Columns</span>
-              <IconChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                )
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex justify-between items-center">
         {activeTab === "products" ? 
-          <ProductForm
-            item={{
-              id: -1,
-              imageSnapshot: "https://placehold.co/600x400.png", // placeholder image
-              product: "",
-              description: "",
-              price: 0,
-              discountedPrice: 0,
-              stock: 0,
-              avgRating: 0,
-              category: "",
-            }}
-            trigger={
-              <Button variant="outline" size="sm">
-                <IconPlus />
-                <span className="hidden lg:inline">Add Product</span>
-              </Button>
-            } 
+          <Input
+            placeholder="Filter product..."
+            value={(table.getColumn("product")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("product")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
           />
           :
-          <CategoryForm
-            item={{
-              id: -1,
-              name: ''
-            }}
-            trigger={
-              <Button variant="outline" size="sm">
-                <IconPlus />
-                <span className="hidden lg:inline">Add Category</span>
-              </Button>
-            } 
+          <Input
+            placeholder="Filter category..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm"
           />
         }
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <IconLayoutColumns />
+                <span className="hidden lg:inline">Customize Columns</span>
+                <span className="lg:hidden">Columns</span>
+                <IconChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {activeTab === "products" ? 
+            <ProductForm
+              item={{
+                id: -1,
+                imageSnapshot: "https://placehold.co/600x400.png", // placeholder image
+                product: "",
+                description: "",
+                price: 0,
+                discountedPrice: 0,
+                stock: 0,
+                avgRating: 0,
+                category: "",
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <IconPlus />
+                  <span className="hidden lg:inline">Add Product</span>
+                </Button>
+              } 
+            />
+            :
+            <CategoryForm
+              item={{
+                id: -1,
+                name: ''
+              }}
+              trigger={
+                <Button variant="outline" size="sm">
+                  <IconPlus />
+                  <span className="hidden lg:inline">Add Category</span>
+                </Button>
+              } 
+            />
+          }
+        </div>
       </div>
       <div className="overflow-hidden rounded-lg border">
         <Table>
