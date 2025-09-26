@@ -1,4 +1,4 @@
-import TableTaps from "@/components/data-table/tap"
+import TableTaps from "@/components/data-table/table-taps"
 
 export default function Page() {
     
