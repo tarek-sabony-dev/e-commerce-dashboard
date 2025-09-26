@@ -118,7 +118,7 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
             variant="destructive"
             size="sm"
             disabled={table.getSelectedRowModel().rows.length === 0}
-            onClick={() => handleDeleteMany(table.getSelectedRowModel().rows.map((row) => (row.original as any).id))}
+            onClick={() => handleDeleteMany(table.getSelectedRowModel().rows.map((row) => (row.original as TData & { id: number }).id))}
           >
             <IconTrash />
             <span className="hidden lg:inline">Delete</span>
