@@ -61,7 +61,7 @@ export const categoryColumns: ColumnDef<Category>[] = [
         </div>
       ) 
     },
-    enableHiding: true,
+    enableHiding: false,
   },
   {
     id: "actions",
@@ -72,5 +72,6 @@ export const categoryColumns: ColumnDef<Category>[] = [
         </div>
       );
     },
+    enableHiding: false,
   },
 ]

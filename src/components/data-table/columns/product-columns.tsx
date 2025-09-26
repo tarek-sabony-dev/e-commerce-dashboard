@@ -157,5 +157,6 @@ export const productColumns: ColumnDef<Product>[] = [
         </div>
       );
     },
+    enableHiding: false,
   },
 ]

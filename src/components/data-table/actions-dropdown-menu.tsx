@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAppDispatch } from "@/lib/hooks"
 import { addProduct, Product, removeProduct } from "@/lib/features/products/products-slice"
-import { CategoryForm, ProductForm } from "./drawer-forms"
 import { addCategory, Category, removeCategory } from "@/lib/features/categories/categories-slice"
+import { CategoryForm, ProductForm } from "./drawer-forms"
 
 export default function ActionsDropdownMenu({ item, table } : { item: Product | Category, table: string }){
   const dispatch = useAppDispatch()

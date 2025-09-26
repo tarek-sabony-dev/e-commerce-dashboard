@@ -14,14 +14,12 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -71,13 +69,9 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
 
   function onSubmit(values: z.infer<typeof productFormSchema>) {
     // This will be type-safe and validated.
-    z.coerce.number().parse(values.price)
-    z.coerce.number().parse(values.discountedPrice)
-    z.coerce.number().parse(values.stock)
-    
     const productData: Product = {
       id: item.id,
-      imageSnapshot: "/cup.png", // Placeholder image
+      imageSnapshot: item.imageSnapshot,
       avgRating: item.avgRating,
       ...values,
     }

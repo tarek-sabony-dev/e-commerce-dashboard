@@ -24,8 +24,6 @@ import {
   SortingState,
   useReactTable,
   VisibilityState,
-  HeaderGroup,
-  Header,
   Cell,
 } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
@@ -111,7 +109,7 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
           <ProductForm
             item={{
               id: -1,
-              imageSnapshot: "https://placehold.co/600x400.png",
+              imageSnapshot: "https://placehold.co/600x400.png", // placeholder image
               product: "",
               description: "",
               price: 0,

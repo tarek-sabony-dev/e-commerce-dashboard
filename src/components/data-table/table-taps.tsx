@@ -13,6 +13,8 @@ import { categoryColumns } from "./columns/category-columns"
 
 export default function TableTaps() {
   const [activeTab, setActiveTab] = React.useState("products")
+
+  // selecting data from redux store
   const products : Product[] = useAppSelector(selectProducts)
   const categories : Category[] = useAppSelector(selectCategories)
   
