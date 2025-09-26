@@ -2,9 +2,9 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Category } from "@/lib/features/categories/categories-slice"
-import { CategoryForm } from "../drawer-forms"
-import ActionsDropdownMenu from "../actions-dropdown-menu"
 import { ArrowUpDown } from "lucide-react"
+import { CategoryForm } from "@/components/data-table/drawer-forms"
+import ActionsDropdownMenu from "@/components/data-table/actions-dropdown-menu"
 
 export const categoryColumns: ColumnDef<Category>[] = [
   {
@@ -50,7 +50,7 @@ export const categoryColumns: ColumnDef<Category>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center ">
-          <CategoryForm 
+          <CategoryForm
             item={row.original}
             trigger={
               <Button variant="link" className="text-foreground w-fit px-0 text-left">

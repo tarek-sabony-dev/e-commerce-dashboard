@@ -5,9 +5,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowUpDown, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { Product } from "@/lib/features/products/products-slice"
-import { ProductForm } from "../drawer-forms"
-import ActionsDropdownMenu from "../actions-dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { ProductForm } from "@/components/data-table/drawer-forms"
+import ActionsDropdownMenu from "@/components/data-table/actions-dropdown-menu"
 
 export const productColumns: ColumnDef<Product>[] = [
   {
@@ -54,7 +54,7 @@ export const productColumns: ColumnDef<Product>[] = [
       return (
         <div className="flex items-center gap-4 ">
           <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" /> 
-          <ProductForm 
+          <ProductForm
             item={row.original}
             trigger={
               <Button variant="link" className="text-foreground w-fit px-0 text-left">
