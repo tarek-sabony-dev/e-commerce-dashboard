@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 import { SiteHeader } from "@/components/site-header";
 import StoreProvider from "./StoreProvider";
+import { EdgeStoreProvider } from '../lib/edgestore';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,29 +36,32 @@ export default function RootLayout({
       <body
         className={`${geistMono.variable} ${geistSans.variable} antialiased`}
       >
-        <StoreProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <SidebarProvider
-              style={
-                {
-                  "--sidebar-width": "calc(var(--spacing) * 72)",
-                  "--header-height": "calc(var(--spacing) * 12)",
-                } as React.CSSProperties
-              }
+        <EdgeStoreProvider>
+
+          <StoreProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
             >
-              <AppSidebar variant="floating" />
-              <SidebarInset>
-                <SiteHeader />
-                  {children}
-              </SidebarInset>
-            </SidebarProvider>
-          </ThemeProvider>
-        </StoreProvider>
+              <SidebarProvider
+                style={
+                  {
+                    "--sidebar-width": "calc(var(--spacing) * 72)",
+                    "--header-height": "calc(var(--spacing) * 12)",
+                  } as React.CSSProperties
+                }
+              >
+                <AppSidebar variant="floating" />
+                <SidebarInset>
+                  <SiteHeader />
+                    {children}
+                </SidebarInset>
+              </SidebarProvider>
+            </ThemeProvider>
+          </StoreProvider>
+        </EdgeStoreProvider>
       </body>
     </html>
   );

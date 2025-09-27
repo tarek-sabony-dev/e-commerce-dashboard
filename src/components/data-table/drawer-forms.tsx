@@ -35,15 +35,16 @@ import { addCategory, Category, selectCategories, updateCategory } from "@/lib/f
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import MultiImageDropzone from "../multi-image-drop-zone"
 
 const productFormSchema = z.object({
-  imageSnapShot: z.string().min(1, { message: 'image name is required' }).max(200, { message: 'image name is too long' }),
+  imageSnapShot: z.string().min(1, { message: 'image url is required' }),
   product: z.string().min(1, { message: 'Product name is required' }).max(200, { message: 'Product name is too long' }),
   description: z.string().max(1000, { message: 'Description is too long' }),
-  price: z.number().min(0, { message: 'Price must be >= 0' }),
-  discountedPrice: z.number().min(0, { message: 'Discounted price must be >= 0' }),
+  price: z.number().positive({ message: 'Price must be > 0' }),
+  discountedPrice: z.number().positive({ message: 'Discounted price must be > 0' }),
   stock: z.number().int({ message: 'Stock must be an integer' }).min(0, { message: 'Stock cannot be negative' }),
-  category: z.string().min(1, { message: 'Category is required' }).max(100),  
+  category: z.string().min(1, { message: 'Category is required' }).max(100),
 })
 
 const categoryFormSchema = z.object({
@@ -204,6 +205,19 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField 
+                control={form.control}
+                name="imageSnapShot"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image</FormLabel>
+                    <FormControl>
+                      <MultiImageDropzone />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
