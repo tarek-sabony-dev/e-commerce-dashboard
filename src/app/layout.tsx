@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/sidebar"
 import { SiteHeader } from "@/components/site-header";
 import StoreProvider from "./StoreProvider";
-import { EdgeStoreProvider } from '../lib/edgestore';
+import { EdgeStoreProvider } from '../lib/edgestore/edgestore';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
