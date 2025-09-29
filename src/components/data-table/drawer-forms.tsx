@@ -35,7 +35,6 @@ import { addCategory, Category, selectCategories, updateCategory } from "@/lib/f
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
-import MultiImageDropzone from "../multi-image-drop-zone"
 
 const productFormSchema = z.object({
   imageSnapShot: z.string().min(1, { message: 'image url is required' }),
@@ -216,7 +215,7 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
                   <FormItem>
                     <FormLabel>Image</FormLabel>
                     <FormControl>
-                      <MultiImageDropzone />
+                      <Input placeholder="Image URL" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
