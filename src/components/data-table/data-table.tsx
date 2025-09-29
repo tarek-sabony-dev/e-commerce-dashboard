@@ -156,7 +156,8 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
             <ProductForm
               item={{
                 id: -1,
-                imageSnapshot: "https://placehold.co/600x400.png", // placeholder image
+                thumbnails: ["https://placehold.co/600x400.png"], // placeholder image
+                imageSnapshots: ["https://placehold.co/600x400.png"], // placeholder image
                 product: "",
                 description: "",
                 price: 0,

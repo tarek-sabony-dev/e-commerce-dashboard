@@ -3,7 +3,8 @@ import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface Product {
   id: number
-  imageSnapshot: string
+  thumbnails: string[]
+  imageSnapshots: string[]
   product: string
   description: string
   price: number
@@ -20,7 +21,8 @@ export interface ProductsState {
 const initialProducts = [
   {
     "id": 1,
-    "imageSnapshot": "/cup.png",
+    "thumbnails": ["/cup.png"],
+    "imageSnapshots": ["/cup.png"],
     "product": "Cup",
     "price": 19.99,
     "description": "A nice ceramic cup for your beverages.",
@@ -31,7 +33,8 @@ const initialProducts = [
   },
   {
     "id": 2,
-    "imageSnapshot": "/t-shirt.png",
+    "thumbnails": ["/t-shirt.png"],
+    "imageSnapshots": ["/t-shirt.png"],
     "product": "T-Shirt",
     "description": "A comfortable cotton t-shirt.",
     "price": 20.99,
@@ -42,7 +45,8 @@ const initialProducts = [
   },
   {
     "id": 3,
-    "imageSnapshot": "/sofa.png",
+    "thumbnails": ["/sofa.png"],
+    "imageSnapshots": ["/sofa.png"],
     "product": "Sofa",
     "description": "A stylish and comfortable sofa.",
     "price": 250,

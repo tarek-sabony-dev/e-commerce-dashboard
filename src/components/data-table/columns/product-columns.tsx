@@ -53,7 +53,7 @@ export const productColumns: ColumnDef<Product>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4 ">
-          <Image width={56} height={56} src={row.original.imageSnapshot} alt="product-snapshot" className="rounded-lg" /> 
+          <Image width={56} height={56} src={row.original.thumbnails[0]} alt="product-snapshot" className="rounded-lg" /> 
           <ProductForm
             item={row.original}
             trigger={

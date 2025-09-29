@@ -35,9 +35,18 @@ import { addCategory, Category, selectCategories, updateCategory } from "@/lib/f
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useEdgeStore } from "@/lib/edgestore/edgestore"
+import { UploaderProvider, UploadFn } from "../upload/uploader-provider"
+import { ImageUploader } from "../upload/multi-image"
+
+interface ImageObject {
+  key: string;
+  url: string;
+}
 
 const productFormSchema = z.object({
-  imageSnapShot: z.string().min(1, { message: 'image url is required' }),
+  thumbnails: z.array(z.string()).min(1, { message: 'At least one image is required' }),
+  imageSnapShots: z.array(z.string()).min(1, { message: 'At least one image is required' }),
   product: z.string().min(1, { message: 'Product name is required' }).max(200, { message: 'Product name is too long' }),
   description: z.string().max(1000, { message: 'Description is too long' }),
   price: z.number().positive({ message: 'Price must be > 0' }),
@@ -51,13 +60,18 @@ const categoryFormSchema = z.object({
 })
 
 function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNode }){
+  const [thumbnails, setThumbnails] = React.useState<ImageObject[]>([])
+  const [imageSnapShots, setImageSnapShots] = React.useState<ImageObject[]>([])
+  const { edgestore } = useEdgeStore()
+  
   const isMobile = useIsMobile()
   const dispatch = useAppDispatch()
   const categories : Category[] = useAppSelector(selectCategories)
   const form = useForm<z.infer<typeof productFormSchema>>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
-      imageSnapShot: item.imageSnapshot,
+      thumbnails: thumbnails.map((img) => img.url) || item.thumbnails,
+      imageSnapShots: imageSnapShots.map((img) => img.url) || item.imageSnapshots,
       product: item.product,
       price: item.price,
       description: item.description,
@@ -67,25 +81,71 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
     },
   })
 
-  function onSubmit(values: z.infer<typeof productFormSchema>) {
+  async function onSubmit(values: z.infer<typeof productFormSchema>) {
+    console.log("submitting")
     // This will be type-safe and validated.
     const productData: Product = {
       id: item.id,
-      imageSnapshot: item.imageSnapshot,
+      imageSnapshots: item.imageSnapshots,
       avgRating: item.avgRating,
       ...values,
+    }
+
+    // confirm upload for each image
+    for (const url of values.imageSnapShots) {
+      await edgestore.publicImages.confirmUpload({
+        url: url
+      });
+    }
+    for (const url of values.thumbnails) {
+      await edgestore.publicImages.confirmUpload({
+        url: url
+      });
     }
 
     // (id === -1) means a new category
     const isNewProduct = item.id === -1
     isNewProduct ? dispatch(addProduct(productData)) : dispatch(updateProduct(productData))
+
+    setImageSnapShots([]);
+    setThumbnails([]);
   }
+
+  // Upload images to edgestore as temporary files
+  const uploadFn: UploadFn = React.useCallback(
+    async ({ file, onProgressChange, signal }) => {
+      const res = await edgestore.publicImages.upload({
+        options: {
+          temporary: true,
+        },
+        file,
+        signal,
+        onProgressChange,
+      });
+      
+      // you can run some server action or api here to add the necessary data to your database
+
+      return res;
+    },
+    [edgestore],
+  );
 
   React.useEffect(() => {
     if (item.id === -1) {
       form.reset()
     }
   }, [item]);
+
+  // Sync react-hook-form when urls change
+  React.useEffect(() => {
+    form.setValue('imageSnapShots', imageSnapShots.map((img) => img.url) || [],)
+    console.log(imageSnapShots)
+  }, [imageSnapShots, form])
+
+  React.useEffect(() => {
+    form.setValue('thumbnails', thumbnails.map((img) => img.url) || [],)
+    // console.log(thumbnails)
+  }, [thumbnails, form])
 
   return (
     <Drawer direction={isMobile ? "bottom" : "right"}>
@@ -210,12 +270,85 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
               />
               <FormField 
                 control={form.control}
-                name="imageSnapShot"
+                name="imageSnapShots"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Image</FormLabel>
                     <FormControl>
-                      <Input placeholder="Image URL" {...field} />
+                      <div>
+                        {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
+                        <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
+                        <UploaderProvider
+                          uploadFn={uploadFn}
+                          autoUpload
+                          // reset when form is submitted
+                          key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
+                          onFileRemoved={(key) => {
+                            // remove from local state
+                            setImageSnapShots(prev => {
+                              const next = prev.filter(img => img.key !== key)
+                              return next
+                            })
+                          }}
+                          onUploadCompleted={(res) => {
+                            // add to local state
+                            if (res?.url && res?.key) {
+                              setImageSnapShots(prev => {
+                                const next = [...prev, { url: res.url, key: res.key }]                          
+                                return next
+                              })
+                            }
+                          }}
+                        >
+                          <ImageUploader
+                            maxFiles={10}
+                            maxSize={1024 * 1024 * 1} // 1 MB
+                          />
+                        </UploaderProvider>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField 
+                control={form.control}
+                name="thumbnails"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Image</FormLabel>
+                    <FormControl>
+                      <div>
+                        {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
+                        <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
+                        <UploaderProvider
+                          uploadFn={uploadFn}
+                          autoUpload
+                          // reset when form is submitted
+                          key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
+                          onFileRemoved={(key) => {
+                            // remove from local state
+                            setThumbnails(prev => {
+                              const next = prev.filter(img => img.key !== key)
+                              return next
+                            })
+                          }}
+                          onUploadCompleted={(res) => {
+                            // add to local state
+                            if (res?.url && res?.key) {
+                              setThumbnails(prev => {
+                                const next = [...prev, { url: res.url, key: res.key }]                          
+                                return next
+                              })
+                            }
+                          }}
+                        >
+                          <ImageUploader
+                            maxFiles={10}
+                            maxSize={1024 * 1024 * 1} // 1 MB
+                          />
+                        </UploaderProvider>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
