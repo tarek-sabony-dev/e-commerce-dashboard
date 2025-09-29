@@ -35,7 +35,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { CategoryForm, ProductForm } from "./drawer-forms"
 import { Input } from "../ui/input"
 import { removeProduct } from "@/lib/features/products/products-slice"
-import { useAppDispatch } from "@/lib/hooks"
+import { useAppDispatch } from "@/lib/hooks/hooks"
 import { removeCategory } from "@/lib/features/categories/categories-slice"
 
 interface TableContentProps<TData> {

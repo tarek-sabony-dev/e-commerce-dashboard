@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu"
-import { useAppDispatch } from "@/lib/hooks"
+import { useAppDispatch } from "@/lib/hooks/hooks"
 import { addProduct, Product, removeProduct } from "@/lib/features/products/products-slice"
 import { addCategory, Category, removeCategory } from "@/lib/features/categories/categories-slice"
 import { CategoryForm, ProductForm } from "./drawer-forms"

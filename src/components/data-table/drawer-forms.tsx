@@ -28,8 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { useAppDispatch, useAppSelector } from "@/lib/hooks"
+import { useIsMobile } from "@/lib/hooks/use-mobile"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks/hooks"
 import { addProduct, Product, updateProduct } from "@/lib/features/products/products-slice"
 import { addCategory, Category, selectCategories, updateCategory } from "@/lib/features/categories/categories-slice"
 import { z } from "zod"
