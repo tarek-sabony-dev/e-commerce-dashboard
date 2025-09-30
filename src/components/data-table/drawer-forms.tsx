@@ -268,92 +268,97 @@ function ProductForm({ item, trigger }: { item: Product, trigger?: React.ReactNo
                   </FormItem>
                 )}
               />
-              <FormField 
-                control={form.control}
-                name="imageSnapShots"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image</FormLabel>
-                    <FormControl>
-                      <div>
-                        {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
-                        <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
-                        <UploaderProvider
-                          uploadFn={uploadFn}
-                          autoUpload
-                          // reset when form is submitted
-                          key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
-                          onFileRemoved={(key) => {
-                            // remove from local state
-                            setImageSnapShots(prev => {
-                              const next = prev.filter(img => img.key !== key)
-                              return next
-                            })
-                          }}
-                          onUploadCompleted={(res) => {
-                            // add to local state
-                            if (res?.url && res?.key) {
+              <div className="flex justify-between items-start gap-4">
+                <FormField
+                  control={form.control}
+                  name="imageSnapShots"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Product snap-shots</FormLabel>
+                      <FormControl>
+                        <div>
+                          {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
+                          <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
+                          <UploaderProvider
+                            uploadFn={uploadFn}
+                            autoUpload
+                            // reset when form is submitted
+                            key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
+                            onFileRemoved={(key) => {
+                              // remove from local state
                               setImageSnapShots(prev => {
-                                const next = [...prev, { url: res.url, key: res.key }]                          
+                                const next = prev.filter(img => img.key !== key)
                                 return next
                               })
-                            }
-                          }}
-                        >
-                          <ImageUploader
-                            maxFiles={10}
-                            maxSize={1024 * 1024 * 1} // 1 MB
-                          />
-                        </UploaderProvider>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField 
-                control={form.control}
-                name="thumbnails"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image</FormLabel>
-                    <FormControl>
-                      <div>
-                        {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
-                        <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
-                        <UploaderProvider
-                          uploadFn={uploadFn}
-                          autoUpload
-                          // reset when form is submitted
-                          key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
-                          onFileRemoved={(key) => {
-                            // remove from local state
-                            setThumbnails(prev => {
-                              const next = prev.filter(img => img.key !== key)
-                              return next
-                            })
-                          }}
-                          onUploadCompleted={(res) => {
-                            // add to local state
-                            if (res?.url && res?.key) {
+                            }}
+                            onUploadCompleted={(res) => {
+                              // add to local state
+                              if (res?.url && res?.key) {
+                                setImageSnapShots(prev => {
+                                  const next = [...prev, { url: res.url, key: res.key }]                          
+                                  return next
+                                })
+                              }
+                            }}
+                          >
+                            <ImageUploader
+                              imageListClassName="border-2 border-dashed border-border"
+                              maxFiles={10}
+                              maxSize={1024 * 1024 * 5} // 5 MB
+                            />
+                          </UploaderProvider>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField 
+                  control={form.control}
+                  name="thumbnails"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormLabel>Product thumbnails</FormLabel>
+                      <FormControl>
+                        <div>
+                          {/* hidden binding for react-hook-form; actual value is synced via setValue when images are added/removed */}
+                          <Input type="hidden" value={Array.isArray(field.value) ? field.value.join(',') : ''} readOnly  />
+                          <UploaderProvider
+                            uploadFn={uploadFn}
+                            autoUpload
+                            // reset when form is submitted
+                            key={form.formState.isSubmitSuccessful ? 'reset' : 'no-reset'} 
+                            onFileRemoved={(key) => {
+                              // remove from local state
                               setThumbnails(prev => {
-                                const next = [...prev, { url: res.url, key: res.key }]                          
+                                const next = prev.filter(img => img.key !== key)
                                 return next
                               })
-                            }
-                          }}
-                        >
-                          <ImageUploader
-                            maxFiles={10}
-                            maxSize={1024 * 1024 * 1} // 1 MB
-                          />
-                        </UploaderProvider>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                            }}
+                            onUploadCompleted={(res) => {
+                              // add to local state
+                              if (res?.url && res?.key) {
+                                setThumbnails(prev => {
+                                  const next = [...prev, { url: res.url, key: res.key }]     
+                                  console.log(thumbnails)                     
+                                  return next
+                                })
+                              }
+                            }}
+                          >
+                            <ImageUploader
+                              imageListClassName="border-2 border-dashed border-border"
+                              maxFiles={10}
+                              maxSize={1024 * 1024 * 5} // 5 MB
+                            />
+                          </UploaderProvider>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="submit">
                 Submit
               </Button>

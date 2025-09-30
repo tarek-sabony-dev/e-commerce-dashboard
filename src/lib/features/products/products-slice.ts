@@ -21,8 +21,8 @@ export interface ProductsState {
 const initialProducts = [
   {
     "id": 1,
-    "thumbnails": ["/cup.png"],
-    "imageSnapshots": ["/cup.png"],
+    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/a0d16f0c-1fa9-4836-baf7-334bb1b34911.png"],
+    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/a0d16f0c-1fa9-4836-baf7-334bb1b34911.png"],
     "product": "Cup",
     "price": 19.99,
     "description": "A nice ceramic cup for your beverages.",
@@ -33,8 +33,8 @@ const initialProducts = [
   },
   {
     "id": 2,
-    "thumbnails": ["/t-shirt.png"],
-    "imageSnapshots": ["/t-shirt.png"],
+    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4ca71016-2055-4aff-9a14-d190a25ab6d5.png"],
+    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4ca71016-2055-4aff-9a14-d190a25ab6d5.png"],
     "product": "T-Shirt",
     "description": "A comfortable cotton t-shirt.",
     "price": 20.99,
@@ -45,8 +45,8 @@ const initialProducts = [
   },
   {
     "id": 3,
-    "thumbnails": ["/sofa.png"],
-    "imageSnapshots": ["/sofa.png"],
+    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/063582f8-d4ca-4615-8f73-d419005068b8.png"],
+    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/063582f8-d4ca-4615-8f73-d419005068b8.png"],
     "product": "Sofa",
     "description": "A stylish and comfortable sofa.",
     "price": 250,
