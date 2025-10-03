@@ -29,13 +29,13 @@ const initialProducts = [
     "thumbnails": [
       {
         "key": "initial-thumb-0",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/cfc9097b-d64a-42f9-a609-0411759d14f1.png"
+        "url": "/cup.png"
       }
     ],
     "imageSnapShots": [
       {
         "key": "initial-snap-0",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/cfc9097b-d64a-42f9-a609-0411759d14f1.png"
+        "url": "/cup.png"
       }
     ],
     "product": "Cup",
@@ -51,13 +51,13 @@ const initialProducts = [
     "thumbnails": [
       {
         "key": "initial-thumb-1",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4dfa6c3f-b16a-4bf3-9286-b2ee95f9e43e.png"
+        "url": "t-shirt.png"
       }
     ],
     "imageSnapShots": [
       {
         "key": "initial-snap-1",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4dfa6c3f-b16a-4bf3-9286-b2ee95f9e43e.png"
+        "url": "t-shirt.png"
       }
     ],
     "product": "T-Shirt",
@@ -73,13 +73,13 @@ const initialProducts = [
     "thumbnails": [
       {
         "key": "initial-thumb-2",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/f585cb20-adcc-41bb-8d3c-130a5bd747bc.png"
+        "url": "sofa.png"
       }
     ],
     "imageSnapShots": [
       {
         "key": "initial-thumb-2",
-        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/f585cb20-adcc-41bb-8d3c-130a5bd747bc.png"
+        "url": "sofa.png"
       }
     ],
     "product": "Sofa",
