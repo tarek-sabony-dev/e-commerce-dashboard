@@ -33,18 +33,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistMono.variable} ${geistSans.variable} antialiased`}
-      >
+      <body className={`${geistMono.variable} ${geistSans.variable} antialiased`}>
         <EdgeStoreProvider>
-
           <StoreProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               <SidebarProvider
                 style={
                   {

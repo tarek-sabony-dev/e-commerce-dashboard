@@ -1,10 +1,15 @@
 import { createSlice, createSelector } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
+export type ImageObject = {
+  url: string
+  key: string
+}
+
 export interface Product {
   id: number
-  thumbnails: string[]
-  imageSnapshots: string[]
+  thumbnails: ImageObject[]
+  imageSnapShots: ImageObject[]
   product: string
   description: string
   price: number
@@ -21,8 +26,18 @@ export interface ProductsState {
 const initialProducts = [
   {
     "id": 1,
-    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/a0d16f0c-1fa9-4836-baf7-334bb1b34911.png"],
-    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/a0d16f0c-1fa9-4836-baf7-334bb1b34911.png"],
+    "thumbnails": [
+      {
+        "key": "initial-thumb-0",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/cfc9097b-d64a-42f9-a609-0411759d14f1.png"
+      }
+    ],
+    "imageSnapShots": [
+      {
+        "key": "initial-snap-0",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/cfc9097b-d64a-42f9-a609-0411759d14f1.png"
+      }
+    ],
     "product": "Cup",
     "price": 19.99,
     "description": "A nice ceramic cup for your beverages.",
@@ -33,8 +48,18 @@ const initialProducts = [
   },
   {
     "id": 2,
-    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4ca71016-2055-4aff-9a14-d190a25ab6d5.png"],
-    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4ca71016-2055-4aff-9a14-d190a25ab6d5.png"],
+    "thumbnails": [
+      {
+        "key": "initial-thumb-1",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4dfa6c3f-b16a-4bf3-9286-b2ee95f9e43e.png"
+      }
+    ],
+    "imageSnapShots": [
+      {
+        "key": "initial-snap-1",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/4dfa6c3f-b16a-4bf3-9286-b2ee95f9e43e.png"
+      }
+    ],
     "product": "T-Shirt",
     "description": "A comfortable cotton t-shirt.",
     "price": 20.99,
@@ -45,8 +70,18 @@ const initialProducts = [
   },
   {
     "id": 3,
-    "thumbnails": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/063582f8-d4ca-4615-8f73-d419005068b8.png"],
-    "imageSnapshots": ["https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/063582f8-d4ca-4615-8f73-d419005068b8.png"],
+    "thumbnails": [
+      {
+        "key": "initial-thumb-2",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/f585cb20-adcc-41bb-8d3c-130a5bd747bc.png"
+      }
+    ],
+    "imageSnapShots": [
+      {
+        "key": "initial-thumb-2",
+        "url": "https://files.edgestore.dev/mpu0sy1y54lv2h1z/publicImages/_public/f585cb20-adcc-41bb-8d3c-130a5bd747bc.png"
+      }
+    ],
     "product": "Sofa",
     "description": "A stylish and comfortable sofa.",
     "price": 250,

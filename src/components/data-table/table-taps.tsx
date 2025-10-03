@@ -17,6 +17,7 @@ export default function TableTaps() {
   // selecting data from redux store
   const products : Product[] = useAppSelector(selectProducts)
   const categories : Category[] = useAppSelector(selectCategories)
+  console.log(products)
   
   // Handle tab change
   const handleTabChange = (value: string) => {

@@ -36,14 +36,14 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
       title: "Products",
       url: "/dashboard/products",
       icon: IconListDetails,
+    },
+    {
+      title: "Orders",
+      url: "/dashboard/orders",
+      icon: IconDashboard,
     },
   ],
   navClouds: [
