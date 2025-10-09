@@ -11,15 +11,23 @@ import {
   index,
   uniqueIndex,
   primaryKey,
+  jsonb,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { usersSync } from 'drizzle-orm/neon';
+import { relations, sql } from "drizzle-orm";
 
 // Enums
 export const imageKindEnum = pgEnum("image_kind", ["thumbnail", "preview"]);
 export const cartStatusEnum = pgEnum("cart_status", ["active", "ordered", "abandoned"]);
 export const orderStatusEnum = pgEnum("order_status", ["pending","paid","shipped","completed","cancelled",]);
 export const paymentStatusEnum = pgEnum("payment_status", ["unpaid", "paid", "refunded"]);
+
+// Users (sync placeholder for external auth provider)
+export const usersSync = pgTable(
+  "users_sync",
+  {
+    id: text("id").primaryKey(),
+  }
+);
 
 export const addresses = pgTable(
 "addresses",
@@ -52,30 +60,13 @@ export const products = pgTable("products", {
   avgRating: numeric("avg_rating", { precision: 3, scale: 2 }).notNull().default("0"),
   reviewsCount: integer("reviews_count").notNull().default(0),
   description: text("description"),
+  imagesArray: jsonb('ImagesArray').$type<{ key: string; url: string }[]>().notNull().default(sql`'[]'::jsonb`),
   detiledDescription: text("detiled_description"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-  
 }, (t) => [
   uniqueIndex("products_product_slug_unique").on(t.productSlug),
 ]);
-
-// Product Images
-export const productImages = pgTable(
-  "product_images",
-  {
-    id: serial("id").primaryKey(),
-    productId: integer("product_id")
-      .notNull()
-      .references(() => products.id, { onDelete: "cascade" }),
-    url: text("url").notNull(),
-    kind: imageKindEnum("kind").notNull(),
-    sortOrder: integer("sort_order").notNull().default(0),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [
-      index("product_images_product_id_idx").on(t.productId),
-  ]);
 
 // Categories
 export const categories = pgTable(
@@ -84,7 +75,7 @@ export const categories = pgTable(
     id: serial("id").primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     slug: varchar("slug", { length: 255 }).notNull(),
-    imgUrl: text("imgUrl").notNull().default("/blanck,png"),
+    img: jsonb("img").$type<{ key: string; url: string }>().notNull().default(sql`'{"key": "default", "url": "blank,png"}'::jsonb`),
   },
   (t) => [
     uniqueIndex("categories_slug_unique").on(t.slug),
@@ -234,19 +225,11 @@ export const orderItems = pgTable(
 export const addressesRelations = relations(addresses, ({}) => ({}));
 
 export const productsRelations = relations(products, ({ many }) => ({
-  images: many(productImages),
   reviews: many(reviews),
   cartItems: many(cartItems),
   wishlistItems: many(wishlistItems),
   orderItems: many(orderItems),
   categories: many(productCategories),
-}));
-
-export const productImagesRelations = relations(productImages, ({ one }) => ({
-  product: one(products, {
-    fields: [productImages.productId],
-    references: [products.id],
-  }),
 }));
 
 export const categoriesRelations = relations(categories, ({ many }) => ({

@@ -53,7 +53,7 @@ export const productColumns: ColumnDef<Product>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center gap-4 ">
-          <Image width={56} height={56} src={row.original.thumbnails[0].url} alt="product-snapshot" className="rounded-lg" /> 
+          <Image width={56} height={56} src={row.original.primaryImage?.url ?? ""} alt="product-snapshot" className="rounded-lg" /> 
           <ProductForm
             item={row.original}
             trigger={
@@ -144,7 +144,7 @@ export const productColumns: ColumnDef<Product>[] = [
     header: "Category",
     cell: ({ row }) => (
       <div className="w-32">
-        {row.original.category}
+        {row.original.category.name}
       </div>
     ),
   },

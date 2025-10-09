@@ -1,15 +1,16 @@
 "use server";
 import { db } from "@/database/db";
-import { and, asc, count, desc, eq, inArray, SQL, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray} from "drizzle-orm";
 import {
   products,
-  productImages,
   categories,
   productCategories,
 } from "@/database/schema";
 import type { ListedProduct } from "@/types/product";
 import { ListProductsParams } from "@/types/product";
 import { CategoryWithCount } from "@/types/category";
+import { Product } from "@/lib/features/products/products-slice";
+import { Category } from "@/lib/features/categories/categories-slice";
 
 export type Img = {
   id: number;
@@ -111,6 +112,7 @@ export async function listProducts(
           discountedPrice: true,
           reviewsCount: true,
           description: true,
+          imagesArray: true,
         },
         limit: limit,
         offset: offset,
@@ -125,13 +127,6 @@ export async function listProducts(
                 },
               },
             },
-          },
-          images: {
-            columns: {
-              url: true,
-              kind: true,
-            },
-            orderBy: (images, { asc }) => [asc(images.sortOrder)],
           },
         },
         orderBy: orderByClause,
@@ -148,24 +143,53 @@ export async function listProducts(
   }
 }
 
-export async function insertProduct(items: InseartItem) {
+export async function insertProduct(items: Product) {
   try {
-    const product = await db
+    // Create imagesArray with primaryImage first, then imageSnapShots
+    const imagesArray: { key: string; url: string }[] = [];
+    
+    // Add primary image first if it exists
+    if (items.primaryImage) {
+      imagesArray.push({
+        key: items.primaryImage.key,
+        url: items.primaryImage.url
+      });
+    }
+    
+    // Add snapshot images
+    if (items.imageSnapShots && items.imageSnapShots.length > 0) {
+      items.imageSnapShots.forEach(snapshot => {
+        imagesArray.push({
+          key: snapshot.key,
+          url: snapshot.url
+        });
+      });
+    }
+
+    // Map slice Product -> DB product payload
+    const productPayload = {
+      title: items.product,
+      price: String(items.price),
+      discountedPrice: String(items.discountedPrice),
+      stock: items.stock,
+      description: items.description,
+      imagesArray: imagesArray,
+      productSlug: items.product.toLowerCase().replace(/\s+/g, "-"),
+      reviewsCount: 0, // no reviews yet on creation
+    };
+
+    const inserted = await db
       .insert(products)
-      .values(items.product)
+      .values(productPayload)
       .returning({ id: products.id });
+
+    const productId = inserted[0].id;
+
+    // Category relation (use selected category id)
     await db.insert(productCategories).values({
-      productId: product[0].id,
-      categoryId: items.categories[0].categoryId,
+      productId,
+      categoryId: items.category.id,
     });
-    await db.insert(productImages).values(
-      items.images.map((img: Omit<Img, "id">) => ({
-        productId: product[0].id,
-        url: img.url,
-        kind: img.kind,
-        sortOrder: img.sortOrder,
-      }))
-    );
 
     return;
   } catch (error) {
@@ -174,58 +198,49 @@ export async function insertProduct(items: InseartItem) {
   }
 }
 
-export async function DBupdateproduct(id: number, items: UpdateItem) {
+export async function DBupdateproduct(items: Product) {
   try {
-    await db.update(products).set(items.product).where(eq(products.id, id));
+    // Create imagesArray with primaryImage first, then imageSnapShots
+    const imagesArray: { key: string; url: string }[] = [];
+    
+    // Add primary image first if it exists
+    if (items.primaryImage) {
+      imagesArray.push({
+        key: items.primaryImage.key,
+        url: items.primaryImage.url
+      });
+    }
+    
+    // Add snapshot images
+    if (items.imageSnapShots && items.imageSnapShots.length > 0) {
+      items.imageSnapShots.forEach(snapshot => {
+        imagesArray.push({
+          key: snapshot.key,
+          url: snapshot.url
+        });
+      });
+    }
+
+    // Map slice Product -> DB product payload
+    const productPayload = {
+      title: items.product,
+      price: String(items.price),
+      discountedPrice: String(items.discountedPrice),
+      stock: items.stock,
+      description: items.description,
+      imagesArray: imagesArray,
+      productSlug: items.product.toLowerCase().replace(/\s+/g, "-"),
+      reviewsCount: 0, // no reviews yet on creation
+    };
+
+    await db
+      .update(products)
+      .set(productPayload)
+      .where(eq(products.id, items.id));
     await db
       .update(productCategories)
-      .set({ categoryId: items.categories[0].categoryId })
-      .where(and(eq(productCategories.productId, id)));
-
-    // Update images using CASE statements (single query)
-    if (items.images.length > 0) {
-      // Build CASE statements for each column
-      const urlCaseChunks: SQL[] = [sql`(case`];
-      const kindCaseChunks: SQL[] = [sql`(case`];
-      const sortOrderCaseChunks: SQL[] = [sql`(case`];
-      const imageIds: number[] = [];
-
-      for (const img of items.images) {
-        // Use the image ID as the identifier
-        urlCaseChunks.push(
-          sql`when ${productImages.id} = ${img.id} then ${img.url}`
-        );
-        kindCaseChunks.push(
-          sql`when ${productImages.id} = ${img.id} then ${img.kind}`
-        );
-        sortOrderCaseChunks.push(
-          sql`when ${productImages.id} = ${img.id} then ${img.sortOrder}`
-        );
-        imageIds.push(img.id);
-      }
-
-      urlCaseChunks.push(sql`end)`);
-      kindCaseChunks.push(sql`end)`);
-      sortOrderCaseChunks.push(sql`end)`);
-
-      const urlCaseSql = sql.join(urlCaseChunks, sql.raw(" "));
-      const kindCaseSql = sql.join(kindCaseChunks, sql.raw(" "));
-      const sortOrderCaseSql = sql.join(sortOrderCaseChunks, sql.raw(" "));
-
-      await db
-        .update(productImages)
-        .set({
-          url: urlCaseSql,
-          kind: kindCaseSql,
-          sortOrder: sortOrderCaseSql,
-        })
-        .where(
-          and(
-            eq(productImages.productId, id),
-            inArray(productImages.id, imageIds)
-          )
-        );
-    }
+      .set({ categoryId: items.category.id })
+      .where(and(eq(productCategories.productId, items.id)));
 
     return;
   } catch (error) {
@@ -236,10 +251,6 @@ export async function DBupdateproduct(id: number, items: UpdateItem) {
 
 export async function deleteProduct(ids: number[]) {
   try {
-    await db.delete(productImages).where(inArray(productImages.productId, ids));
-    await db
-      .delete(productCategories)
-      .where(inArray(productCategories.productId, ids));
     await db.delete(products).where(inArray(products.id, ids));
     return;
   } catch (error) {
@@ -253,7 +264,7 @@ export async function listCategoriesWithCounts(): Promise<CategoryWithCount[]> {
     .select({
       id: categories.id,
       name: categories.name,
-      imgUrl: categories.imgUrl,
+      img: categories.img,
       productCount: count(productCategories.productId).mapWith(Number),
     })
     .from(categories)
@@ -261,7 +272,7 @@ export async function listCategoriesWithCounts(): Promise<CategoryWithCount[]> {
       productCategories,
       eq(categories.id, productCategories.categoryId)
     )
-    .groupBy(categories.id, categories.name, categories.imgUrl);
+    .groupBy(categories.id, categories.name, categories.img);
 
   console.log("listCategoriesWithCounts called");
   return rows as CategoryWithCount[];
@@ -273,9 +284,14 @@ export interface CategoryItem {
   slug: string;
 }
 
-export async function insertCategory(item: CategoryItem) {
+export async function insertCategory(item: Category) {
   try {
-    await db.insert(categories).values(item);
+    const categoryPayload = {
+      name: item.name,
+      slug: item.name.toLowerCase().replace(/\s+/g, "-"),
+      img: item.img,
+    };
+    await db.insert(categories).values(categoryPayload);
     return;
   } catch (error) {
     console.error("Error in addCategory:", error);
@@ -283,9 +299,17 @@ export async function insertCategory(item: CategoryItem) {
   }
 }
 
-export async function DBupdateCategory(id: number, item: CategoryItem) {
+export async function DBupdateCategory(item: Category) {
   try {
-    await db.update(categories).set(item).where(eq(categories.id, id));
+    const categoryPayload = {
+      name: item.name,
+      slug: item.name.toLowerCase().replace(/\s+/g, "-"),
+      img: item.img,
+    };
+    await db
+      .update(categories)
+      .set(categoryPayload)
+      .where(eq(categories.id, item.id));
     return;
   } catch (error) {
     console.error("Error in updateCategory:", error);
@@ -295,6 +319,11 @@ export async function DBupdateCategory(id: number, item: CategoryItem) {
 
 export async function deleteCategory(ids: number[]) {
   try {
+    // Delete from productCategories junction table first
+    await db
+      .delete(productCategories)
+      .where(inArray(productCategories.categoryId, ids));
+    // Then delete the categories themselves
     await db.delete(categories).where(inArray(categories.id, ids));
     return;
   } catch (error) {

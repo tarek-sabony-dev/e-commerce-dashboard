@@ -34,6 +34,29 @@ export const categoryColumns: ColumnDef<Category>[] = [
     enableHiding: false,
   },
   {
+    accessorKey: "img",
+    header: "Image",
+    cell: ({ row }) => {
+      const img = row.original.img;
+      return (
+        <div className="w-16 h-16 flex items-center justify-center">
+          {img?.url ? (
+            <img
+              src={img.url}
+              alt={row.original.name}
+              className="w-12 h-12 object-cover rounded-md border"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-gray-200 rounded-md border flex items-center justify-center text-xs text-gray-500">
+              No Image
+            </div>
+          )}
+        </div>
+      );
+    },
+    enableSorting: false,
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => {
       return (

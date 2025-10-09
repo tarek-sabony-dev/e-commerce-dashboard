@@ -1,10 +1,12 @@
-import { CategoryItem, DBupdateCategory, deleteCategory, insertCategory, listCategoriesWithCounts } from '@/actions/actions'
+import { DBupdateCategory, deleteCategory, insertCategory, listCategoriesWithCounts } from '@/actions/actions'
+import { normalizeCategories } from '@/utils/categoryUtils'
 import { createSlice, createSelector, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 
 export interface Category {
   id: number
   name: string
+  img: {key:string, url:string}
 }
 
 export interface CategoriesState {
@@ -21,7 +23,7 @@ export const AysncFetchCategories = createAsyncThunk(
   async () => {
     try {
       const response = await listCategoriesWithCounts();
-      return response; // you should normallize this data to fit your state shape
+      return normalizeCategories(response)
     } catch (error) {
       console.error("Error in fetchCategories:", error);
       return [];
@@ -31,10 +33,10 @@ export const AysncFetchCategories = createAsyncThunk(
 
 export const AysncAddCategories = createAsyncThunk(
   "categories/addCategories",
-  async (items: CategoryItem) => {
+  async (item: Category) => {
     try {
-      const response = await insertCategory(items);
-      return response; // you could pick what you want to return
+      await insertCategory(item);
+      return;
     } catch (error) {
       console.error("Error in addCategories:", error);
       return [];
@@ -44,10 +46,10 @@ export const AysncAddCategories = createAsyncThunk(
 
 export const AysncUpdateCategories = createAsyncThunk(
   "categories/updateCategories",
-  async (items: CategoryItem&{id:number}) => {
+  async (item: Category) => {
     try {
-      const response = await DBupdateCategory(items.id, items);
-      return response; // you could pick what you want to return
+      await DBupdateCategory(item);
+      return;
     } catch (error) {
       console.error("Error in updateCategories:", error);
       return [];
@@ -59,8 +61,8 @@ export const AysncDeleteCategories = createAsyncThunk(
   "categories/deleteCategories",
   async (ids: number[]) => {
     try {
-      const response = await deleteCategory(ids);
-      return response; // return the deleted id
+      await deleteCategory(ids);
+      return;
     } catch (error) {
       console.error("Error in deleteCategories:", error);
       return null;
@@ -68,51 +70,51 @@ export const AysncDeleteCategories = createAsyncThunk(
   }
 );
 
-const initialCategories = [
-  {
-    "id": 1,
-    "name": "Electronics"
-  },
-  {
-    "id": 2,
-    "name": "Clothing"
-  },
-  {
-    "id": 3,
-    "name": "Home & Garden"
-  },
-  {
-    "id": 4,
-    "name": "Sports & Outdoors"
-  },
-  {
-    "id": 5,
-    "name": "Books"
-  },
-  {
-    "id": 6,
-    "name": "Toys & Games"
-  },
-  {
-    "id": 7,
-    "name": "Beauty & Personal Care"
-  },
-  {
-    "id": 8,
-    "name": "Automotive"
-  },
-  {
-    "id": 9,
-    "name": "Food & Beverages"
-  },
-  {
-    "id": 10,
-    "name": "Health & Wellness"
-  }
-]
+// const initialCategories = [
+//   {
+//     "id": 26,
+//     "name": "Electronics"
+//   },
+//   {
+//     "id": 22,
+//     "name": "Clothing"
+//   },
+//   {
+//     "id": 21,
+//     "name": "Home & Garden"
+//   },
+//   {
+//     "id": 4,
+//     "name": "Sports & Outdoors"
+//   },
+//   {
+//     "id": 5,
+//     "name": "Books"
+//   },
+//   {
+//     "id": 6,
+//     "name": "Toys & Games"
+//   },
+//   {
+//     "id": 7,
+//     "name": "Beauty & Personal Care"
+//   },
+//   {
+//     "id": 8,
+//     "name": "Automotive"
+//   },
+//   {
+//     "id": 9,
+//     "name": "Food & Beverages"
+//   },
+//   {
+//     "id": 10,
+//     "name": "Health & Wellness"
+//   }
+// ]
 
 const initialState: CategoriesState = {
-  items: [...initialCategories],
+  items: [],
   isLoading: false,
   error: null,
   addStatus: "idle",
@@ -125,8 +127,8 @@ export const categoriesSlice = createSlice({
   initialState,
   reducers: {
     addCategory: (state, action: PayloadAction<Category>) => {
-      action.payload.id = Date.now() // Assign a new id
-      state.items.push(action.payload)
+      action.payload.id = Date.now()
+      state.items.unshift(action.payload)
     },
     updateCategory: (state, action: PayloadAction<Category>) => {
       const index = state.items.findIndex((p) => p.id === action.payload.id)
@@ -150,7 +152,7 @@ export const categoriesSlice = createSlice({
       })
       .addCase(AysncFetchCategories.fulfilled, (state, action) => {
         state.isLoading = false;
-        // state.items = action.payload; // you might want to normalize this data
+        state.items = action.payload;
       })
       .addCase(AysncFetchCategories.rejected, (state, action) => {
         state.isLoading = false;
@@ -179,9 +181,6 @@ export const categoriesSlice = createSlice({
       })
       .addCase(AysncDeleteCategories.fulfilled, (state, action) => {
         state.removeStatus = "succeeded";
-        if (action.payload) {
-          state.items = state.items.filter((p) => p.id !== action.payload);
-        }
       })
       .addCase(AysncDeleteCategories.rejected, (state) => {
         state.removeStatus = "failed";

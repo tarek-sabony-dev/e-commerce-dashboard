@@ -3,15 +3,15 @@
 import * as React from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "../ui/label"
-import { Product, selectProducts } from "@/lib/features/products/products-slice"
-import { Category, selectCategories } from "@/lib/features/categories/categories-slice"
-import { useAppSelector } from "@/lib/hooks/hooks"
+import { AysncFetchProducts, Product, selectProducts } from "@/lib/features/products/products-slice"
+import { AysncFetchCategories, Category, selectCategories } from "@/lib/features/categories/categories-slice"
+import { useAppDispatch, useAppSelector } from "@/lib/hooks/hooks"
 import { productColumns } from "./columns/product-columns"
 import DataTable from "./data-table"
 import { categoryColumns } from "./columns/category-columns"
 
-
 export default function TableTaps() {
+  const dispatch = useAppDispatch()
   const [activeTab, setActiveTab] = React.useState("products")
 
   // selecting data from redux store
@@ -22,6 +22,11 @@ export default function TableTaps() {
   const handleTabChange = (value: string) => {
     setActiveTab(value)
   }
+
+  React.useEffect(()=>{
+    dispatch(AysncFetchProducts({}))
+    dispatch(AysncFetchCategories())
+  },[dispatch])
 
   return (
     <Tabs

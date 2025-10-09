@@ -34,9 +34,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { CategoryForm, ProductForm } from "./drawer-forms"
 import { Input } from "../ui/input"
-import { removeProduct } from "@/lib/features/products/products-slice"
+import { AysncDeleteProducts, removeProduct } from "@/lib/features/products/products-slice"
 import { useAppDispatch } from "@/lib/hooks/hooks"
-import { removeCategory } from "@/lib/features/categories/categories-slice"
+import { AysncDeleteCategories, AysncFetchCategories, removeCategory } from "@/lib/features/categories/categories-slice"
 
 interface TableContentProps<TData> {
   columns: ColumnDef<TData>[]
@@ -57,13 +57,21 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
 
   // handle deletion of multiple items
   const handleDeleteMany = (selectedIds : number[]) => {
-    selectedIds.map((id) => {
+    
       if (activeTab === "products") {
+        dispatch(AysncDeleteProducts(selectedIds))
+        selectedIds.map((id) => {
         dispatch(removeProduct(id))
+        })
+        dispatch(AysncFetchCategories())
       } else {
+        dispatch(AysncDeleteCategories(selectedIds))
+        selectedIds.map((id) => {
         dispatch(removeCategory(id))
+        })
+        dispatch(AysncFetchCategories())
       }
-    })
+      
     setRowSelection({})
   }
 
@@ -156,7 +164,7 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
             <ProductForm
               item={{
                 id: -1,
-                thumbnails: [],
+                primaryImage: {key:'',url:''},
                 imageSnapShots: [],
                 product: "",
                 description: "",
@@ -164,7 +172,7 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
                 discountedPrice: 0,
                 stock: 0,
                 avgRating: 0,
-                category: "",
+                category: {id:0, name: ""},
               }}
               trigger={
                 <Button variant="outline" size="sm">
@@ -177,7 +185,8 @@ export default function DataTable<TData>({ columns, data, activeTab }: TableCont
             <CategoryForm
               item={{
                 id: -1,
-                name: ''
+                name: '',
+                img: {key:'',url:''}
               }}
               trigger={
                 <Button variant="outline" size="sm">
